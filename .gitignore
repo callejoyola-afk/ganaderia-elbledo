@@ -1,0 +1,22 @@
+# Por defecto se ignora TODO. Solo se sube lo que hay abajo.
+*
+
+# Lo que va a GitHub Pages:
+!index.html
+!sw.js
+!manifest.json
+!supabase.js
+!.gitignore
+
+# Íconos (cuando los agreguemos):
+!icono*.png
+!icono*.svg
+
+# Nunca subir:
+#   *.md              (documentación de trabajo)
+#   *.sql             (migraciones, no van en el sitio)
+#   funciones/        (código de servidor)
+#   migraciones/
+#   pruebas/
+#   .env*             (secretos)
+#   node_modules/

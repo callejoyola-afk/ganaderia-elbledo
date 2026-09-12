@@ -1,0 +1,1592 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#2b6a4a">
+<title>El Bledo — Ganadería</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%90%84%3C/text%3E%3C/svg%3E">
+<style>
+:root{
+  --verde:#2b6a4a;--verde-osc:#1e4a34;--amarillo:#c68a1a;--rojo:#a83232;
+  --fondo:#f4f2ec;--tarjeta:#ffffff;--texto:#1e1e1e;--gris:#7b7b7b;
+  --borde:#d8d5cc;--tap:44px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--fondo);color:var(--texto);
+  font:16px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+button,input,select,textarea{font:inherit;color:inherit}
+header{background:var(--verde);color:#fff;padding:8px 10px;
+  position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+header h1{font-size:15px;margin:0;flex:1}
+header .chip{background:rgba(255,255,255,.18);padding:2px 8px;border-radius:12px;font-size:12px;white-space:nowrap}
+header .chip.warn{background:var(--amarillo)}
+header .chip.err{background:var(--rojo)}
+header .chip.ok{background:#3d8b5c}
+header .mini{background:#fff;color:var(--verde);border:0;padding:4px 10px;border-radius:6px;font-size:12px;min-height:32px}
+nav.tabs{display:flex;overflow-x:auto;background:var(--verde-osc);color:#fff;
+  position:sticky;top:44px;z-index:9;-webkit-overflow-scrolling:touch}
+nav.tabs button{background:none;border:0;color:#fff;padding:10px 14px;
+  min-height:var(--tap);white-space:nowrap;border-bottom:3px solid transparent}
+nav.tabs button.on{border-bottom-color:#fff;font-weight:600}
+main{padding:10px;padding-bottom:80px}
+.card{background:var(--tarjeta);border:1px solid var(--borde);border-radius:8px;
+  padding:12px;margin-bottom:12px}
+.card h2{margin:0 0 8px;font-size:16px}
+.card h3{margin:8px 0 4px;font-size:14px;color:var(--gris)}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+label{display:block;font-size:13px;color:var(--gris);margin-top:8px}
+input,select,textarea{width:100%;padding:10px;border:1px solid var(--borde);
+  border-radius:6px;background:#fff;min-height:var(--tap)}
+textarea{min-height:80px}
+button.btn{background:var(--verde);color:#fff;border:0;border-radius:6px;
+  padding:10px 14px;min-height:var(--tap);cursor:pointer;font-weight:600}
+button.btn.sec{background:#fff;color:var(--verde);border:1px solid var(--verde)}
+button.btn.warn{background:var(--amarillo)}
+button.btn.err{background:var(--rojo)}
+button.btn.gris{background:#eee;color:var(--texto);border:1px solid var(--borde)}
+button.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-grande{display:block;width:100%;padding:16px;font-size:18px;margin-top:8px}
+table{width:100%;border-collapse:collapse}
+.wrap-tabla{overflow-x:auto;-webkit-overflow-scrolling:touch}
+th,td{text-align:left;padding:8px;border-bottom:1px solid var(--borde);font-size:14px;vertical-align:top}
+th{background:#eee;font-weight:600;position:sticky;top:0}
+tr._pend td{background:#fff8e6}
+tr._rej td{background:#fbe6e6}
+.tag{display:inline-block;padding:2px 6px;border-radius:4px;font-size:12px;white-space:nowrap}
+.tag.pend{background:var(--amarillo);color:#fff}
+.tag.aprobada{background:#3d8b5c;color:#fff}
+.tag.rechazada{background:var(--rojo);color:#fff}
+.tag.anulada{background:#7b7b7b;color:#fff}
+.tag.rev{background:var(--rojo);color:#fff}
+.toast{position:fixed;left:12px;right:12px;bottom:12px;background:#111;color:#fff;
+  padding:12px;border-radius:6px;z-index:100;text-align:center;box-shadow:0 2px 8px #0006}
+.toast.err{background:var(--rojo)}
+.toast.warn{background:var(--amarillo)}
+.banner{background:var(--amarillo);color:#fff;padding:8px 12px;text-align:center}
+.banner.err{background:var(--rojo)}
+.banner button{background:#fff;color:var(--amarillo);border:0;padding:6px 12px;border-radius:6px;margin-left:8px}
+.banner.err button{color:var(--rojo)}
+.hidden{display:none}
+.pill{padding:2px 8px;border-radius:12px;background:#eee;font-size:12px}
+small.hint{color:var(--gris);font-size:12px}
+.flex{display:flex;gap:8px}
+.flex>*{flex:1}
+.acciones{display:flex;gap:4px;flex-wrap:wrap}
+.acciones button{padding:4px 8px;min-height:32px;font-size:13px}
+.numero{font-size:22px;font-weight:600}
+.centro{text-align:center}
+.linea{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px dashed var(--borde)}
+.linea:last-child{border-bottom:0}
+#pantalla-instalar,#pantalla-entrar{max-width:420px;margin:20px auto}
+@media (min-width:700px){
+  main{max-width:900px;margin:0 auto}
+}
+</style>
+</head>
+<body>
+
+<div id="banner-cuota" class="banner err hidden">
+  El almacenamiento del celular está lleno. Los registros nuevos quedan en memoria y se perderán si cierra la app antes de sincronizar.
+  <button onclick="reintentarGuardado()">Reintentar</button>
+</div>
+<div id="banner-version" class="banner hidden">
+  Hay una versión nueva de la app.
+  <button onclick="actualizarApp()">Actualizar</button>
+</div>
+
+<header id="cabecera" class="hidden">
+  <h1 id="titulo-app">El Bledo</h1>
+  <span class="chip" id="chip-usuario">—</span>
+  <span class="chip" id="chip-pend">0 pend</span>
+  <span class="chip" id="chip-rev">0 rev</span>
+  <span class="chip" id="chip-online">●</span>
+  <button class="mini" onclick="sincronizarAhora()">Sync</button>
+  <button class="mini" onclick="cerrarSesion()">Salir</button>
+</header>
+
+<nav class="tabs hidden" id="tabs"></nav>
+
+<main id="app">
+  <section id="pantalla-arranque" class="hidden centro"><p>Cargando…</p></section>
+
+  <section id="pantalla-instalar" class="hidden">
+    <div class="card">
+      <h2>Instalar la app</h2>
+      <p><small class="hint">Primera vez. Cree la cuenta del administrador.</small></p>
+      <label>Código de instalación</label>
+      <input id="i-codigo" autocomplete="off">
+      <label>Nombre completo</label>
+      <input id="i-nombre" autocomplete="name">
+      <label>Usuario (sin espacios, mínimo 3 letras)</label>
+      <input id="i-usuario" autocomplete="username">
+      <label>Clave (mínimo 8 caracteres)</label>
+      <input id="i-clave" type="password">
+      <button class="btn btn-grande" onclick="instalar()">Instalar</button>
+      <p id="i-msg" style="color:var(--rojo);margin-top:8px"></p>
+      <p><small class="hint">Versión <span id="i-ver"></span></small></p>
+    </div>
+  </section>
+
+  <section id="pantalla-entrar" class="hidden">
+    <div class="card">
+      <h2>Entrar</h2>
+      <label>Usuario o correo</label>
+      <input id="e-usuario" autocomplete="username">
+      <label>Clave</label>
+      <input id="e-clave" type="password" autocomplete="current-password">
+      <button class="btn btn-grande" onclick="entrar()">Entrar</button>
+      <p id="e-msg" style="color:var(--rojo);margin-top:8px"></p>
+      <p><small class="hint">Si su usuario no tiene correo, se completa con el dominio del proyecto.</small></p>
+      <p><small class="hint">Versión <span id="e-ver"></span></small></p>
+    </div>
+  </section>
+
+  <section id="pantalla-inicio" class="hidden"></section>
+  <section id="pantalla-registrar" class="hidden"></section>
+  <section id="pantalla-aprobar" class="hidden"></section>
+  <section id="pantalla-revisar" class="hidden"></section>
+  <section id="pantalla-inversion" class="hidden"></section>
+  <section id="pantalla-mi-cuenta" class="hidden"></section>
+  <section id="pantalla-finca" class="hidden"></section>
+  <section id="pantalla-personas" class="hidden"></section>
+  <section id="pantalla-lotes" class="hidden"></section>
+  <section id="pantalla-animales" class="hidden"></section>
+  <section id="pantalla-inventario" class="hidden"></section>
+  <section id="pantalla-config" class="hidden"></section>
+  <section id="pantalla-respaldo" class="hidden"></section>
+</main>
+
+<div id="toast" class="hidden toast"></div>
+
+<script src="supabase.js" onerror="document.body.innerHTML='&lt;div style=&quot;padding:24px;font-family:sans-serif&quot;&gt;&lt;h2&gt;No pudo cargar la librería local.&lt;/h2&gt;&lt;p&gt;Falta el archivo &lt;b&gt;supabase.js&lt;/b&gt; en el mismo sitio. Contacte al admin.&lt;/p&gt;&lt;/div&gt;'"></script>
+<script>
+'use strict';
+if(typeof window.supabase === 'undefined' || !window.supabase.createClient){
+  document.body.innerHTML = '<div style="padding:24px;font-family:sans-serif;color:#a83232"><h2>No pudo cargar la librería local.</h2><p>Falta o está corrupto el archivo <b>supabase.js</b>. Sin él la app no puede arrancar. Recargue con señal la próxima vez que actualice la app.</p></div>';
+  throw new Error('supabase.js no cargó');
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// 1. Configuración y constantes
+// ────────────────────────────────────────────────────────────────────────────
+const APP_VER = '1.0.0';
+const SB_URL = 'https://hwvufzeayumqjxjtebvp.supabase.co';
+const SB_KEY = 'sb_publishable_YUdn_GQCaSrZMmjR12eCYQ_8PDmV0OU';
+const CLAVE_BASE = 'elbledo.v1';
+const REINTENTO_MS = 60000;
+const VENTANA_DIAS = 90;
+const MARGEN_SYNC_MIN = 5;
+const RECONCILIA_HORAS = 24;
+
+// Tablas que la app usa. Orden importa: catálogos y estructura primero.
+const TABLAS_SYNC = [
+  'catalogos','config','personas','sectores','potreros','grupos',
+  'lotes_negocio','inversionistas_externos','contratos_lote',
+  'productos','lotes_producto','jornales','periodos',
+  'animales','labores','aportes','costos'
+];
+
+// ────────────────────────────────────────────────────────────────────────────
+// 2. Estado en memoria
+// ────────────────────────────────────────────────────────────────────────────
+let sb = null;
+let sesion = null;
+let dominioUsuarios = 'ganaderia-elbledo.app';
+let data = estadoDataVacio();
+let pend = [];
+let revisar = [];
+let descarte = [];
+let sync = {};
+let ultimoPend = 0;
+let flushing = false;
+let refrescando = false;
+let pantallaActual = null;
+let respaldoMemoria = null;
+let cuotaAlerta = false;
+let ultimoIntentoGuardar = null;
+let timerReintento = null;
+let regSW = null;
+
+function estadoDataVacio(){
+  return {
+    catalogos:[], personas:[], sectores:[], potreros:[], grupos:[],
+    lotes_negocio:[], inversionistas_externos:[], contratos_lote:[],
+    productos:[], lotes_producto:[], jornales:[], periodos:[],
+    animales:[], labores:[], aportes:[], costos:[],
+    config:null
+  };
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// 3. Utilidades
+// ────────────────────────────────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+const esc = s => { const d = document.createElement('div'); d.textContent = s==null?'':String(s); return d.innerHTML; };
+const uuid = () => (typeof crypto !== 'undefined' && crypto.randomUUID)
+  ? crypto.randomUUID()
+  : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => { const r = Math.random()*16|0; return (c==='x'?r:(r&3)|8).toString(16); });
+
+function hoyBogota(){
+  return new Date().toLocaleString('sv-SE', { timeZone:'America/Bogota' }).slice(0,10);
+}
+function ahoraBogotaISO(){
+  // 'AAAA-MM-DDTHH:MM:SS-05:00'
+  const s = new Date().toLocaleString('sv-SE', { timeZone:'America/Bogota' }).replace(' ','T');
+  return s + '-05:00';
+}
+function fmtMoneda(n){
+  if(n==null || isNaN(n)) return 's/d';
+  return '$' + Math.round(+n).toLocaleString('es-CO');
+}
+function fmtFecha(s){ return !s ? 's/d' : String(s).slice(0,10); }
+function fmtNum(n){ return (n==null || isNaN(n)) ? 's/d' : (+n).toLocaleString('es-CO'); }
+
+function aCorreo(usuario, dominio){
+  const u = String(usuario||'').trim().toLowerCase();
+  if(u.includes('@')) return u;
+  const limpio = u.normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/\s+/g,'.').replace(/[^a-z0-9._-]/g,'');
+  return limpio + '@' + (dominio || 'ganaderia-elbledo.app');
+}
+
+function toast(msg, tipo){
+  const t = $('toast'); if(!t) return;
+  t.className = 'toast' + (tipo==='err' ? ' err' : tipo==='warn' ? ' warn' : '');
+  t.textContent = msg;
+  t.classList.remove('hidden');
+  clearTimeout(t._h);
+  t._h = setTimeout(() => t.classList.add('hidden'), tipo==='err' ? 6000 : 3000);
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// 4. Capa de datos: almacenamiento local seguro
+// ────────────────────────────────────────────────────────────────────────────
+function usuarioActivo(){
+  return (sesion && sesion.user_id) ? sesion.user_id : 'sin_sesion';
+}
+function claveLocal(sufijo){
+  return CLAVE_BASE + '.' + usuarioActivo() + '.' + sufijo;
+}
+
+function guardarClave(clave, valor){
+  try{
+    localStorage.setItem(clave, JSON.stringify(valor));
+    return true;
+  }catch(e){
+    ultimoIntentoGuardar = { clave, error: String(e) };
+    if(!cuotaAlerta){
+      cuotaAlerta = true;
+      const b = $('banner-cuota'); if(b) b.classList.remove('hidden');
+      toast('El almacenamiento del celular está lleno. La cola sigue en memoria.', 'err');
+    }
+    return false;
+  }
+}
+function leerClave(clave, defecto){
+  try{
+    const s = localStorage.getItem(clave);
+    if(s == null) return defecto;
+    return JSON.parse(s);
+  }catch(_){ return defecto; }
+}
+
+function guardarPendLocal(){
+  // Cada estado de cola tiene su propia clave para que un `data` grande nunca lo bloquee.
+  const okP = guardarClave(claveLocal('pend'), pend);
+  const okR = guardarClave(claveLocal('revisar'), revisar);
+  const okD = guardarClave(claveLocal('descarte'), descarte);
+  return okP && okR && okD;
+}
+function guardarDataLocal(){
+  guardarClave(claveLocal('data'), dataAGuardar());
+  guardarClave(claveLocal('sync'), sync);
+}
+
+function dataAGuardar(){
+  // Ventana: catálogos completos + mis labores/aportes de últimos 90 días o meses abiertos.
+  const hoy = new Date(hoyBogota());
+  const desde = new Date(hoy); desde.setDate(desde.getDate() - VENTANA_DIAS);
+  const desdeStr = desde.toISOString().slice(0,10);
+  const cerrados = new Set((data.periodos||[]).filter(p=>p.estado==='cerrado').map(p=>p.periodo));
+  const filtroFecha = f => {
+    if(!f || !f.fecha) return true;
+    if(f.fecha >= desdeStr) return true;
+    const p = String(f.fecha).slice(0,7);
+    return !cerrados.has(p);
+  };
+  const soyAdmin = sesion && sesion.rol === 'admin';
+  const miPersona = sesion && sesion.persona_id;
+  const filtroMio = f => soyAdmin || !miPersona || f.persona_id === miPersona;
+
+  const activas = (data.animales||[]).filter(a => a.estado === 'activo' || a._pend);
+  const laboresV = (data.labores||[]).filter(l => filtroFecha(l) && filtroMio(l));
+  const aportesV = (data.aportes||[]).filter(a => filtroFecha(a) && filtroMio(a));
+  const costosV  = (data.costos||[]).filter(c => filtroFecha(c));
+
+  return {
+    ...data,
+    animales: activas,
+    labores: laboresV,
+    aportes: aportesV,
+    costos: costosV
+  };
+}
+
+function cargarLocal(){
+  data = leerClave(claveLocal('data'), estadoDataVacio());
+  pend = leerClave(claveLocal('pend'), []);
+  revisar = leerClave(claveLocal('revisar'), []);
+  descarte = leerClave(claveLocal('descarte'), []);
+  sync = leerClave(claveLocal('sync'), {});
+}
+
+function reintentarGuardado(){
+  if(guardarPendLocal() && guardarClave(claveLocal('data'), dataAGuardar())){
+    cuotaAlerta = false;
+    const b = $('banner-cuota'); if(b) b.classList.add('hidden');
+    toast('Guardado local recuperado', 'ok');
+  }
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// 5. Conexión a Supabase
+// ────────────────────────────────────────────────────────────────────────────
+function conectarSB(){
+  const url = String(SB_URL).trim().replace(/\/rest\/v1\/?$/,'').replace(/\/+$/,'');
+  sb = window.supabase.createClient(url, SB_KEY, {
+    global: { headers: { 'x-app-ver': APP_VER } },
+    auth: { persistSession: true, autoRefreshToken: true, storageKey: CLAVE_BASE + '.auth' }
+  });
+  return sb;
+}
+
+async function estadoInstalacion(){
+  const { data:d, error } = await sb.rpc('estado_instalacion');
+  if(error) throw error;
+  return d || {};
+}
+
+async function vincularMiCuenta(){
+  const { data:d, error } = await sb.rpc('vincular_mi_cuenta');
+  if(error) throw error;
+  return d || { ok:false };
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// 6. Cola: encolar, clasificar errores, flush
+// ────────────────────────────────────────────────────────────────────────────
+function encolar(tabla, op, id, payload, deps){
+  const item = {
+    id_local: uuid(),
+    tabla, op, id,
+    payload: payload || {},
+    deps: deps || [],
+    intentos: 0,
+    ultimoError: null,
+    fecha: Date.now()
+  };
+  pend.push(item);
+  ultimoPend = Date.now();
+  aplicarLocal(tabla, op, id, item.payload, { pend:true });
+  guardarPendLocal();
+  guardarDataLocal();
+  actualizarChips();
+  flush();
+  return item;
+}
+
+function aplicarLocal(tabla, op, id, payload, extra){
+  if(!data[tabla]) data[tabla] = [];
+  const arr = data[tabla];
+  const i = arr.findIndex(r => r && r.id === id);
+  const marca = extra && extra.pend ? { _pend:true } : {};
+  if(op === 'insert'){
+    if(i < 0) arr.push(Object.assign({}, payload, { id }, marca));
+    else arr[i] = Object.assign({}, arr[i], payload, marca);
+  }else if(op === 'update'){
+    if(i >= 0) arr[i] = Object.assign({}, arr[i], payload, marca);
+  }else if(op === 'delete_logico'){
+    if(i >= 0) arr[i] = Object.assign({}, arr[i], {
+      deleted_at: ahoraBogotaISO(),
+      motivo_anulacion: payload && payload.motivo_anulacion
+    }, marca);
+  }
+}
+
+function esRedError(status, mensaje){
+  if(status === 0 || status === 408 || status === 429) return true;
+  if(status >= 500 && status <= 599) return true;
+  if(!status && mensaje && /network|fetch|failed|timeout/i.test(mensaje)) return true;
+  return false;
+}
+
+function clasificarRespuesta(res){
+  if(!res) return { tipo:'red', mensaje:'Sin respuesta del servidor' };
+  const status = res.status || 0;
+  const e = res.error;
+  if(!e){
+    if(res._esUpdate && Array.isArray(res.data) && res.data.length === 0){
+      return { tipo:'no_visible', mensaje:'El servidor no aceptó la fila: sin permiso o ya no existe.' };
+    }
+    return { tipo:'ok' };
+  }
+  const code = e.code || '';
+  const msg = e.message || String(e);
+  if(status === 401) return { tipo:'auth', mensaje:'Su sesión caducó. Vuelva a entrar.' };
+  if(esRedError(status, msg)) return { tipo:'red', mensaje: msg };
+  const negocioCodes = ['P0001','23505','23514','23503','42501','22P02','42P01'];
+  if(negocioCodes.includes(code)) return { tipo:'negocio', codigo:code, mensaje: msg };
+  return { tipo:'negocio', codigo: code || 'desconocido', mensaje: msg };
+}
+
+async function ejecutarItem(item){
+  const t = item.tabla;
+  try{
+    if(item.op === 'insert'){
+      const r = await sb.from(t).upsert(item.payload, { onConflict:'id', ignoreDuplicates:true });
+      return { data:r.data, error:r.error, status:r.status };
+    }
+    if(item.op === 'update'){
+      const r = await sb.from(t).update(item.payload).eq('id', item.id).select('id');
+      return { data:r.data, error:r.error, status:r.status, _esUpdate:true };
+    }
+    if(item.op === 'delete_logico'){
+      const p = { deleted_at: ahoraBogotaISO(), motivo_anulacion: item.payload && item.payload.motivo_anulacion };
+      const r = await sb.from(t).update(p).eq('id', item.id).select('id');
+      return { data:r.data, error:r.error, status:r.status, _esUpdate:true };
+    }
+    return { error:{ message:'Operación desconocida: ' + item.op }, status:0 };
+  }catch(e){
+    return { error:{ message: String(e && e.message || e) }, status: 0 };
+  }
+}
+
+async function flush(){
+  if(flushing) return;
+  if(!sesion) return;
+  if(typeof navigator !== 'undefined' && !navigator.onLine) return;
+  if(!sb) return;
+  flushing = true;
+  actualizarChips();
+  try{
+    while(pend.length > 0){
+      const item = pend[0];
+      item.intentos++;
+      const res = await ejecutarItem(item);
+      const c = clasificarRespuesta(res);
+      if(c.tipo === 'ok'){
+        pend.shift();
+        marcarNoPend(item.tabla, item.id);
+        guardarPendLocal();
+      }else if(c.tipo === 'red'){
+        item.ultimoError = c.mensaje;
+        guardarPendLocal();
+        break;                       // DETENER: no saltar al siguiente
+      }else if(c.tipo === 'auth'){
+        item.ultimoError = c.mensaje;
+        guardarPendLocal();
+        toast(c.mensaje, 'err');
+        break;
+      }else{
+        // negocio o no_visible: a Revisar; arrastrar dependientes
+        pend.shift();
+        const rechazado = Object.assign({}, item, {
+          motivo: c.tipo,
+          mensaje: c.mensaje,
+          codigo: c.codigo || null,
+          fecha_rechazo: Date.now()
+        });
+        revisar.push(rechazado);
+        arrastrarDependientes(item);
+        guardarPendLocal();
+      }
+    }
+  }finally{
+    flushing = false;
+    actualizarChips();
+    if(pantallaActual) renderPantalla(pantallaActual);
+  }
+}
+
+function marcarNoPend(tabla, id){
+  const arr = data[tabla]; if(!arr) return;
+  const i = arr.findIndex(r => r && r.id === id);
+  if(i >= 0){ delete arr[i]._pend; }
+  guardarDataLocal();
+}
+
+function arrastrarDependientes(item){
+  const idAfectado = item.id;
+  const quedan = [];
+  const arrastrar = [];
+  for(const p of pend){
+    const dependePorId = (p.deps || []).includes(idAfectado);
+    const editaMismo = p.op !== 'insert' && p.id === idAfectado;
+    if(dependePorId || editaMismo) arrastrar.push(p); else quedan.push(p);
+  }
+  pend = quedan;
+  for(const p of arrastrar){
+    revisar.push(Object.assign({}, p, {
+      motivo: 'dependiente',
+      mensaje: 'Depende de un registro rechazado (' + item.tabla + ').',
+      codigo: null,
+      fecha_rechazo: Date.now()
+    }));
+    arrastrarDependientes(p);
+  }
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// 7. Bajar cambios: incremental y reconciliación
+// ────────────────────────────────────────────────────────────────────────────
+async function refrescarIncremental(){
+  if(refrescando || flushing) return;
+  if(!sesion || !sb) return;
+  if(typeof navigator !== 'undefined' && !navigator.onLine) return;
+  if(pend.length > 0){ flush(); return; }
+  refrescando = true;
+  actualizarChips();
+  const t0 = Date.now();
+  try{
+    for(const tabla of TABLAS_SYNC){
+      if(tabla === 'config'){ await bajarConfig(); continue; }
+      const desde = sync[tabla] || null;
+      let q = sb.from(tabla).select('*');
+      if(desde) q = q.gt('updated_at', desde);
+      const r = await q;
+      if(r.error) throw r.error;
+      if(!Array.isArray(r.data)) throw new Error('Respuesta inválida para ' + tabla);
+      if(ultimoPend > t0){ refrescando = false; actualizarChips(); return; }
+      // En incremental, 0 filas es normal: nada nuevo.
+      let maxUp = null;
+      for(const f of r.data){
+        if(f.deleted_at){
+          data[tabla] = (data[tabla] || []).filter(x => x.id !== f.id);
+        }else{
+          const arr = data[tabla] || (data[tabla] = []);
+          const i = arr.findIndex(x => x.id === f.id);
+          if(i >= 0) arr[i] = Object.assign({}, arr[i], f, { _pend:false });
+          else arr.push(f);
+        }
+        if(f.updated_at && (!maxUp || f.updated_at > maxUp)) maxUp = f.updated_at;
+      }
+      if(maxUp){
+        // Marca = mayor updated_at recibido − MARGEN_SYNC_MIN
+        const d = new Date(maxUp); d.setMinutes(d.getMinutes() - MARGEN_SYNC_MIN);
+        sync[tabla] = d.toISOString();
+      }
+    }
+    reaplicarPendEnData();
+    guardarDataLocal();
+  }catch(e){
+    console.error('refrescarIncremental', e);
+    toast('No se pudo bajar cambios: ' + (e.message || e), 'err');
+  }finally{
+    refrescando = false;
+    actualizarChips();
+    if(pantallaActual) renderPantalla(pantallaActual);
+  }
+}
+
+async function bajarConfig(){
+  try{
+    const r = await sb.from('config').select('*');
+    if(r.error) throw r.error;
+    if(Array.isArray(r.data)) data.config = mapearConfig(r.data);
+  }catch(e){ console.error('config', e); }
+}
+function mapearConfig(filas){
+  const o = {};
+  for(const f of filas){ o[f.clave] = f.valor; }
+  return o;
+}
+
+async function refrescarCompleto(){
+  if(refrescando || flushing) return;
+  if(!sesion || !sb) return;
+  if(typeof navigator !== 'undefined' && !navigator.onLine) return;
+  if(pend.length > 0){ flush(); return; }
+  refrescando = true;
+  actualizarChips();
+  const t0 = Date.now();
+  try{
+    const nuevo = estadoDataVacio();
+    for(const tabla of TABLAS_SYNC){
+      if(tabla === 'config'){ await bajarConfig(); nuevo.config = data.config; continue; }
+      const r = await sb.from(tabla).select('*');
+      if(r.error) throw r.error;
+      if(!Array.isArray(r.data)) throw new Error('Respuesta inválida en carga completa: ' + tabla);
+      const nLoc = (data[tabla] || []).filter(x => !x._pend).length;
+      if(nLoc > 0 && r.data.length === 0){
+        toast('Conexión inestable en ' + tabla + ': no se actualizó para no perder datos', 'err');
+        refrescando = false; actualizarChips(); return;
+      }
+      if(nLoc >= 20 && r.data.length < nLoc * 0.5){
+        toast('Conexión inestable en ' + tabla + ': respuesta a medias', 'err');
+        refrescando = false; actualizarChips(); return;
+      }
+      nuevo[tabla] = r.data;
+    }
+    if(ultimoPend > t0){ refrescando = false; actualizarChips(); return; }
+    respaldoMemoria = JSON.parse(JSON.stringify(data));
+    data = nuevo;
+    reaplicarPendEnData();
+    for(const tabla of TABLAS_SYNC){
+      if(tabla === 'config') continue;
+      const arr = data[tabla] || [];
+      let maxUp = null;
+      for(const f of arr) if(f.updated_at && (!maxUp || f.updated_at > maxUp)) maxUp = f.updated_at;
+      if(maxUp){
+        const d = new Date(maxUp); d.setMinutes(d.getMinutes() - MARGEN_SYNC_MIN);
+        sync[tabla] = d.toISOString();
+      }
+    }
+    guardarDataLocal();
+    guardarClave(claveLocal('ultimo_completo'), new Date().toISOString());
+  }catch(e){
+    console.error('refrescarCompleto', e);
+    toast('Reconciliación falló: ' + (e.message || e), 'err');
+  }finally{
+    refrescando = false;
+    actualizarChips();
+    if(pantallaActual) renderPantalla(pantallaActual);
+  }
+}
+
+function reaplicarPendEnData(){
+  for(const p of pend){
+    aplicarLocal(p.tabla, p.op, p.id, p.payload, { pend:true });
+  }
+}
+
+async function sincronizarAhora(){
+  await flush();
+  await refrescarIncremental();
+}
+
+function debeReconciliar(){
+  const s = leerClave(claveLocal('ultimo_completo'), null);
+  if(!s) return true;
+  const t = new Date(s).getTime();
+  return (Date.now() - t) > RECONCILIA_HORAS * 3600 * 1000;
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// 8. Sesión: instalar, entrar, cerrar
+// ────────────────────────────────────────────────────────────────────────────
+async function instalar(){
+  const codigo = $('i-codigo').value.trim();
+  const nombre = $('i-nombre').value.trim();
+  const usuario = $('i-usuario').value.trim();
+  const clave = $('i-clave').value;
+  const msg = $('i-msg'); msg.textContent = '';
+  if(!codigo){ msg.textContent = 'Escriba el código de instalación.'; return; }
+  if(nombre.length < 2){ msg.textContent = 'Escriba su nombre.'; return; }
+  if(!usuario){ msg.textContent = 'Escriba un usuario.'; return; }
+  if(clave.length < 8){ msg.textContent = 'La clave debe tener al menos 8 caracteres.'; return; }
+  try{
+    const r = await sb.functions.invoke('instalar', { body: { codigo, nombre, usuario, clave } });
+    if(r.error){ msg.textContent = (r.data && r.data.error) || r.error.message || 'Error de instalación'; return; }
+    if(r.data && r.data.ok === false){ msg.textContent = r.data.error || 'No se pudo instalar'; return; }
+    toast('Instalado. Ya puede entrar.');
+    ['i-codigo','i-nombre','i-usuario','i-clave'].forEach(k=>{ const e=$(k); if(e) e.value=''; });
+    await mostrarEntrar();
+  }catch(e){ msg.textContent = String(e && e.message || e); }
+}
+
+async function entrar(){
+  const usuario = $('e-usuario').value.trim();
+  const clave = $('e-clave').value;
+  const msg = $('e-msg'); msg.textContent = '';
+  if(!usuario || !clave){ msg.textContent = 'Escriba usuario y clave.'; return; }
+  const correo = aCorreo(usuario, dominioUsuarios);
+  try{
+    const r = await sb.auth.signInWithPassword({ email: correo, password: clave });
+    if(r.error){ msg.textContent = 'Usuario o clave incorrectos.'; return; }
+    const v = await vincularMiCuenta();
+    if(!v.ok){ await sb.auth.signOut(); msg.textContent = 'Su cuenta no está autorizada; pida acceso al administrador.'; return; }
+    sesion = {
+      user_id: r.data.user.id,
+      persona_id: v.persona_id,
+      rol: v.rol,
+      nombre: (v.nombre || usuario)
+    };
+    guardarClave(CLAVE_BASE + '.sesion', sesion);
+    $('e-clave').value = '';
+    await arrancarConSesion();
+  }catch(e){ msg.textContent = String(e && e.message || e); }
+}
+
+async function cerrarSesion(){
+  if(pend.length > 0){
+    if(!confirm('Hay ' + pend.length + ' registro(s) sin subir. Quedarán en este celular hasta que vuelva a entrar. ¿Salir de todos modos?')) return;
+  }
+  try{ await sb.auth.signOut(); }catch(_){}
+  sesion = null;
+  ocultarTodo();
+  mostrarEntrar();
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// 9. Interfaz: cabecera, chips, pestañas, cambio de pantalla
+// ────────────────────────────────────────────────────────────────────────────
+function ocultarTodo(){
+  document.querySelectorAll('main > section').forEach(s => s.classList.add('hidden'));
+  $('cabecera').classList.add('hidden');
+  $('tabs').classList.add('hidden');
+}
+
+function actualizarChips(){
+  const cp = $('chip-pend'); if(cp){
+    cp.textContent = pend.length + ' pend';
+    cp.className = 'chip' + (pend.length > 0 ? ' warn' : '');
+  }
+  const cr = $('chip-rev'); if(cr){
+    cr.textContent = revisar.length + ' rev';
+    cr.className = 'chip' + (revisar.length > 0 ? ' err' : '');
+  }
+  const co = $('chip-online'); if(co){
+    const en = (typeof navigator === 'undefined') || navigator.onLine;
+    co.textContent = en ? (flushing || refrescando ? '⟳' : '● en línea') : '● sin señal';
+    co.className = 'chip' + (en ? ' ok' : ' err');
+  }
+  const cu = $('chip-usuario'); if(cu && sesion){
+    cu.textContent = (sesion.nombre || 'Usuario') + ' · ' + (sesion.rol || '');
+  }
+}
+
+const PANTALLAS_SOCIO = [
+  ['inicio','Inicio'],
+  ['registrar','Registrar'],
+  ['mi-cuenta','Mi cuenta'],
+  ['finca','Finca'],
+  ['revisar','Revisar']
+];
+const PANTALLAS_ADMIN = [
+  ['inicio','Inicio'],
+  ['aprobar','Aprobar'],
+  ['inversion','Inversión'],
+  ['registrar','Registrar'],
+  ['personas','Personas'],
+  ['lotes','Lotes'],
+  ['animales','Animales'],
+  ['inventario','Inventario'],
+  ['config','Config'],
+  ['respaldo','Respaldo'],
+  ['revisar','Revisar']
+];
+
+function pintarTabs(){
+  const nav = $('tabs'); nav.innerHTML = '';
+  const lista = (sesion && sesion.rol === 'admin') ? PANTALLAS_ADMIN : PANTALLAS_SOCIO;
+  for(const [id, txt] of lista){
+    const b = document.createElement('button');
+    b.textContent = txt;
+    b.dataset.pant = id;
+    b.onclick = () => irA(id);
+    nav.appendChild(b);
+  }
+  nav.classList.remove('hidden');
+}
+
+function irA(id){
+  document.querySelectorAll('main > section').forEach(s => s.classList.add('hidden'));
+  const s = $('pantalla-' + id);
+  if(!s) return;
+  s.classList.remove('hidden');
+  pantallaActual = id;
+  document.querySelectorAll('#tabs button').forEach(b => {
+    b.classList.toggle('on', b.dataset.pant === id);
+  });
+  renderPantalla(id);
+}
+
+function renderPantalla(id){
+  const s = $('pantalla-' + id); if(!s) return;
+  if(id === 'inicio') renderInicio(s);
+  else if(id === 'registrar') renderRegistrar(s);
+  else if(id === 'aprobar') renderAprobar(s);
+  else if(id === 'revisar') renderRevisar(s);
+  else if(id === 'inversion') renderInversion(s);
+  else if(id === 'mi-cuenta') renderMiCuenta(s);
+  else if(id === 'personas') renderPersonas(s);
+  else if(id === 'config') renderConfig(s);
+  else s.innerHTML = '<div class="card"><h2>' + esc(id) + '</h2><p><small class="hint">En construcción. Se agrega en el siguiente paso.</small></p></div>';
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// 10. Pantalla: Inicio (fusiona tablero para admin)
+// ────────────────────────────────────────────────────────────────────────────
+function nombrePersona(id){
+  const p = (data.personas||[]).find(x => x.id === id);
+  return p ? p.nombre : 's/d';
+}
+function nombreLote(id){
+  const l = (data.lotes_negocio||[]).find(x => x.id === id);
+  return l ? (l.codigo || l.nombre || l.id) : 's/d';
+}
+function nombreActividad(id){
+  const c = (data.catalogos||[]).find(x => x.id === id && x.tipo === 'actividad');
+  return c ? c.valor : 's/d';
+}
+function nombreCategoria(id){
+  const c = (data.catalogos||[]).find(x => x.id === id);
+  return c ? c.valor : 's/d';
+}
+
+function misLabores(){
+  const miId = sesion && sesion.persona_id;
+  return (data.labores||[]).filter(l => l.persona_id === miId);
+}
+function laboresPendientes(){
+  return (data.labores||[]).filter(l => l.estado === 'pendiente' && !l.deleted_at);
+}
+
+function renderInicio(s){
+  const soyAdmin = sesion.rol === 'admin';
+  const mias = misLabores();
+  const misPend = mias.filter(l => l.estado === 'pendiente');
+  const misAprob = mias.filter(l => l.estado === 'aprobada');
+  const totalJornalesPend = misPend.reduce((t,l) => t + (+l.jornales || 0), 0);
+  const totalJornalesAprob = misAprob.reduce((t,l) => t + (+l.jornales || 0), 0);
+
+  let html = '';
+  html += '<div class="card"><h2>Buen día, ' + esc(sesion.nombre) + '</h2>';
+  html += '<p><small class="hint">Rol: ' + esc(sesion.rol) + ' · Hoy es ' + esc(hoyBogota()) + '</small></p>';
+  html += '<button class="btn btn-grande" onclick="irA(\'registrar\')">Registrar labor</button>';
+  html += '</div>';
+
+  html += '<div class="card"><h2>Mis jornales</h2>';
+  html += '<div class="linea"><span>Aprobados (cuentan al capital)</span><b>' + fmtNum(totalJornalesAprob) + '</b></div>';
+  html += '<div class="linea"><span>Pendientes de aprobar</span><b>' + fmtNum(totalJornalesPend) + '</b></div>';
+  html += '<p><small class="hint">Solo lo aprobado cuenta como capital.</small></p>';
+  html += '</div>';
+
+  if(soyAdmin){
+    const pendGlobal = laboresPendientes();
+    html += '<div class="card"><h2>Para aprobar</h2>';
+    html += '<div class="linea"><span>Labores pendientes</span><b>' + pendGlobal.length + '</b></div>';
+    html += '<button class="btn" onclick="irA(\'aprobar\')">Ir a aprobar</button>';
+    html += '</div>';
+
+    const lotes = data.lotes_negocio || [];
+    html += '<div class="card"><h2>Lotes activos</h2>';
+    if(!lotes.length) html += '<p><small class="hint">Sin lotes cargados.</small></p>';
+    else {
+      html += '<div class="wrap-tabla"><table>';
+      html += '<tr><th>Código</th><th>Cabezas</th><th>Estado</th></tr>';
+      for(const l of lotes){
+        html += '<tr><td>' + esc(l.codigo||l.id) + '</td><td>' + fmtNum(l.cabezas_entrada) + '</td><td>' + esc(l.estado||'') + '</td></tr>';
+      }
+      html += '</table></div>';
+    }
+    html += '</div>';
+  }
+
+  if(revisar.length > 0){
+    html += '<div class="card"><h2 style="color:var(--rojo)">Bandeja Revisar</h2>';
+    html += '<p>' + revisar.length + ' registro(s) rechazados por el servidor.</p>';
+    html += '<button class="btn err" onclick="irA(\'revisar\')">Ver</button></div>';
+  }
+
+  s.innerHTML = html;
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// 11. Pantalla: Registrar labor
+// ────────────────────────────────────────────────────────────────────────────
+function lotesActivos(){
+  return (data.lotes_negocio||[]).filter(l => l.estado !== 'liquidado' && !l.deleted_at);
+}
+
+function renderRegistrar(s){
+  const actividades = (data.catalogos||[]).filter(c => c.tipo === 'actividad' && c.activo !== false)
+    .sort((a,b) => (a.orden||0) - (b.orden||0));
+  const potreros = (data.potreros||[]).filter(p => !p.deleted_at);
+  const grupos = (data.grupos||[]).filter(g => !g.deleted_at);
+  const lotes = lotesActivos();
+  const unSoloLote = lotes.length === 1 ? lotes[0].id : null;
+
+  let html = '<div class="card"><h2>Registrar labor</h2>';
+  html += '<label>Fecha</label><input id="r-fecha" type="date" value="' + esc(hoyBogota()) + '">';
+  html += '<label>Actividad</label><select id="r-actividad"><option value="">— elegir —</option>';
+  for(const a of actividades) html += '<option value="' + esc(a.id) + '">' + esc(a.valor) + '</option>';
+  html += '<option value="__otro">Otro (escribir cuál)</option></select>';
+  html += '<div id="r-otro-caja" class="hidden"><label>Actividad (escribir)</label><input id="r-otro"></div>';
+
+  html += '<label>Potrero (opcional)</label><select id="r-potrero"><option value="">—</option>';
+  for(const p of potreros) html += '<option value="' + esc(p.id) + '">' + esc(p.codigo || p.nombre) + '</option>';
+  html += '</select>';
+
+  html += '<label>Grupo (opcional)</label><select id="r-grupo"><option value="">—</option>';
+  for(const g of grupos) html += '<option value="' + esc(g.id) + '">' + esc(g.codigo || g.nombre) + '</option>';
+  html += '</select>';
+
+  html += '<label>Lote de negocio</label>';
+  html += '<select id="r-lote-modo">';
+  html += '<option value="uno"' + (unSoloLote?' selected':'') + '>Un lote</option>';
+  html += '<option value="varios">Repartir entre varios (partes iguales, editable)</option>';
+  html += '<option value="admin">No sé, que lo asigne el admin</option>';
+  html += '</select>';
+  html += '<div id="r-lote-uno-caja"><label>Lote</label><select id="r-lote">';
+  html += '<option value="">— elegir —</option>';
+  for(const l of lotes) html += '<option value="' + esc(l.id) + '"' + (unSoloLote===l.id?' selected':'') + '>' + esc(l.codigo || l.id) + '</option>';
+  html += '</select></div>';
+  html += '<div id="r-lote-varios-caja" class="hidden"><label>Marque los lotes y ajuste las partes (deben sumar 1)</label>';
+  for(const l of lotes){
+    html += '<div class="row" style="margin:4px 0"><label style="flex:1;margin:0"><input type="checkbox" data-lote="' + esc(l.id) + '" class="r-lote-chk" onchange="recalcularPartes()"> ' + esc(l.codigo||l.id) + '</label>';
+    html += '<input type="number" step="0.01" min="0" max="1" class="r-lote-prop" data-lote="' + esc(l.id) + '" style="width:100px" value=""></div>';
+  }
+  html += '<p><small class="hint" id="r-suma">Suma: 0</small></p>';
+  html += '</div>';
+
+  html += '<div class="flex">';
+  html += '<div><label>Hora inicio (opcional)</label><input id="r-inicio" type="time"></div>';
+  html += '<div><label>Hora fin (opcional)</label><input id="r-fin" type="time"></div>';
+  html += '</div>';
+
+  html += '<label>Jornales</label><select id="r-jornales"><option value="1">Día completo (1)</option><option value="0.5">Medio día (0.5)</option></select>';
+
+  html += '<label>Modalidad</label><select id="r-modalidad"><option value="participacion">Participación (capital)</option><option value="pagada">Pagada en efectivo</option></select>';
+  html += '<div id="r-pago-caja" class="hidden"><label>Valor pagado</label><input id="r-valor" type="number" min="0" step="1"></div>';
+
+  html += '<label>Observación (opcional)</label><textarea id="r-obs"></textarea>';
+
+  html += '<button class="btn btn-grande" onclick="guardarLabor()">Guardar</button>';
+  html += '<p id="r-msg" style="color:var(--rojo);margin-top:8px"></p>';
+  html += '</div>';
+
+  s.innerHTML = html;
+
+  $('r-actividad').addEventListener('change', e => {
+    $('r-otro-caja').classList.toggle('hidden', e.target.value !== '__otro');
+  });
+  $('r-modalidad').addEventListener('change', e => {
+    $('r-pago-caja').classList.toggle('hidden', e.target.value !== 'pagada');
+  });
+  $('r-lote-modo').addEventListener('change', e => {
+    const v = e.target.value;
+    $('r-lote-uno-caja').classList.toggle('hidden', v !== 'uno');
+    $('r-lote-varios-caja').classList.toggle('hidden', v !== 'varios');
+  });
+}
+
+function recalcularPartes(){
+  const marcados = document.querySelectorAll('.r-lote-chk:checked');
+  const n = marcados.length;
+  const parte = n > 0 ? (Math.round(100/n)/100) : 0;
+  let suma = 0;
+  document.querySelectorAll('.r-lote-prop').forEach(inp => {
+    const id = inp.dataset.lote;
+    const chk = document.querySelector('.r-lote-chk[data-lote="' + id + '"]');
+    if(chk && chk.checked){
+      if(!inp.value) inp.value = parte;
+      suma += parseFloat(inp.value) || 0;
+    }else{
+      inp.value = '';
+    }
+  });
+  const s = $('r-suma'); if(s) s.textContent = 'Suma: ' + suma.toFixed(2);
+}
+
+function combinarFechaHora(fecha, hora){
+  if(!fecha || !hora) return null;
+  return fecha + 'T' + hora + ':00-05:00';
+}
+
+function armarReparto(msgOut){
+  const modo = $('r-lote-modo').value;
+  if(modo === 'admin') return [];
+  if(modo === 'uno'){
+    const lote = $('r-lote').value;
+    if(!lote){ msgOut.textContent = 'Elija el lote.'; return null; }
+    return [{ lote_id: lote, proporcion: 1 }];
+  }
+  // varios
+  const partes = [];
+  let suma = 0;
+  document.querySelectorAll('.r-lote-chk:checked').forEach(chk => {
+    const id = chk.dataset.lote;
+    const inp = document.querySelector('.r-lote-prop[data-lote="' + id + '"]');
+    const p = parseFloat(inp && inp.value) || 0;
+    if(p > 0){ partes.push({ lote_id:id, proporcion:p }); suma += p; }
+  });
+  if(!partes.length){ msgOut.textContent = 'Marque al menos un lote.'; return null; }
+  if(Math.abs(suma - 1) > 0.001){ msgOut.textContent = 'Las partes deben sumar 1 (ahora ' + suma.toFixed(2) + ').'; return null; }
+  return partes;
+}
+
+function guardarLabor(){
+  const msg = $('r-msg'); msg.textContent = '';
+  const fecha = $('r-fecha').value;
+  const actividad = $('r-actividad').value;
+  const otro = $('r-otro') ? $('r-otro').value.trim() : '';
+  const potrero = $('r-potrero').value || null;
+  const grupo = $('r-grupo').value || null;
+  const hInicio = $('r-inicio').value;
+  const hFin = $('r-fin').value;
+  const jornales = parseFloat($('r-jornales').value);
+  const modalidad = $('r-modalidad').value;
+  const valor = $('r-valor') && $('r-valor').value ? parseFloat($('r-valor').value) : null;
+  const obs = $('r-obs').value.trim();
+
+  if(!fecha){ msg.textContent = 'Falta la fecha.'; return; }
+  if(actividad === '' || (actividad === '__otro' && !otro)){ msg.textContent = 'Elija la actividad.'; return; }
+  if(!(jornales === 1 || jornales === 0.5)){ msg.textContent = 'Jornales debe ser 1 o 0.5.'; return; }
+  if(modalidad === 'pagada' && (!valor || valor <= 0)){ msg.textContent = 'Escriba el valor pagado.'; return; }
+
+  const reparto = armarReparto(msg);
+  if(reparto === null) return;
+
+  const id = uuid();
+  const payload = {
+    id,
+    fecha,
+    persona_id: sesion.persona_id,
+    modalidad,
+    jornales,
+    estado: 'pendiente',
+    observacion: obs || null,
+    potrero_id: potrero,
+    grupo_id: grupo,
+    reparto
+  };
+  if(actividad === '__otro') payload.actividad_otro = otro;
+  else payload.actividad_id = actividad;
+  if(hInicio) payload.inicio = combinarFechaHora(fecha, hInicio);
+  if(hFin) payload.fin = combinarFechaHora(fecha, hFin);
+  if(modalidad === 'pagada') payload.valor_pagado = valor;
+
+  encolar('labores', 'insert', id, payload);
+
+  // Formulario siempre vacío al guardar
+  ['r-fecha','r-actividad','r-otro','r-potrero','r-grupo','r-lote','r-inicio','r-fin','r-obs','r-valor']
+    .forEach(k => { const e = $(k); if(e) e.value = ''; });
+  document.querySelectorAll('.r-lote-chk').forEach(c => c.checked = false);
+  document.querySelectorAll('.r-lote-prop').forEach(c => c.value = '');
+  $('r-fecha').value = hoyBogota();
+  $('r-jornales').value = '1';
+  $('r-modalidad').value = 'participacion';
+  $('r-otro-caja').classList.add('hidden');
+  $('r-pago-caja').classList.add('hidden');
+  const s = $('r-suma'); if(s) s.textContent = 'Suma: 0';
+
+  toast('Labor guardada. Pendiente de subir y aprobar.');
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// 12. Pantalla: Aprobar (admin, solo en línea)
+// ────────────────────────────────────────────────────────────────────────────
+const ALERTAS_ES = {
+  sin_lote: 'Sin lote asignado',
+  traslape: 'Se cruza con otra labor de esta persona',
+  fecha_futura: 'La fecha es futura',
+  jornada_larga: 'Jornada mayor a 12 horas',
+  hora_fuera_de_fecha: 'La hora de inicio o fin no cae en la fecha',
+  sin_jornal: 'Falta cargar el jornal del año',
+  stock_negativo: 'Stock en negativo',
+  descanso_insuficiente: 'Descanso del potrero insuficiente'
+};
+function alertasES(al){
+  if(!al) return '';
+  const arr = Array.isArray(al) ? al : [al];
+  return arr.map(a => ALERTAS_ES[a] || a).join(' · ');
+}
+
+function textoReparto(reparto){
+  if(!reparto || !reparto.length) return 'sin lote';
+  return reparto.map(r => nombreLote(r.lote_id) + ' (' + Math.round((r.proporcion||0)*100) + '%)').join(' + ');
+}
+
+function renderAprobar(s){
+  if(sesion.rol !== 'admin'){ s.innerHTML = '<div class="card"><p>Solo el admin aprueba.</p></div>'; return; }
+  const enLinea = navigator.onLine;
+  const pendientes = laboresPendientes();
+  const miPersona = sesion.persona_id;
+
+  let html = '<div class="card"><h2>Aprobar labores</h2>';
+  if(!enLinea) html += '<p style="color:var(--rojo)">Sin señal. Aprobar solo funciona en línea.</p>';
+  html += '<p><small class="hint">' + pendientes.length + ' pendiente(s). Las suyas las aprueba el socio designado.</small></p>';
+
+  if(!pendientes.length){
+    html += '<p>No hay labores pendientes.</p>';
+  }else{
+    for(const l of pendientes){
+      const propia = l.persona_id === miPersona;
+      const acti = l.actividad_id ? nombreActividad(l.actividad_id) : (l.actividad_otro || 's/d');
+      const alertas = alertasES(l.alertas);
+      html += '<div class="card" style="background:#fafafa">';
+      html += '<div class="row"><b>' + esc(nombrePersona(l.persona_id)) + '</b> · ' + esc(fmtFecha(l.fecha));
+      if(l._pend) html += ' <span class="tag pend">sin subir</span>';
+      html += '</div>';
+      html += '<div class="linea"><span>Actividad</span><span>' + esc(acti) + '</span></div>';
+      html += '<div class="linea"><span>Jornales</span><span>' + fmtNum(l.jornales) + '</span></div>';
+      html += '<div class="linea"><span>Modalidad</span><span>' + esc(l.modalidad||'') + '</span></div>';
+      html += '<div class="linea"><span>Reparto actual</span><span>' + esc(textoReparto(l.reparto)) + '</span></div>';
+      if(l.observacion) html += '<div class="linea"><span>Observación</span><span>' + esc(l.observacion) + '</span></div>';
+      if(alertas) html += '<p style="color:var(--rojo);margin:6px 0"><b>Alertas:</b> ' + esc(alertas) + '</p>';
+      if(propia){
+        html += '<p><small class="hint">Es suya. La aprueba el socio designado.</small></p>';
+      }else{
+        html += renderEditorReparto(l.id, l.reparto);
+        html += '<div class="acciones">';
+        html += '<button class="btn" ' + (enLinea?'':'disabled') + ' onclick="aprobarLabor(\'' + esc(l.id) + '\')">Aprobar</button>';
+        html += '<button class="btn err" ' + (enLinea?'':'disabled') + ' onclick="rechazarLabor(\'' + esc(l.id) + '\')">Rechazar</button>';
+        html += '</div>';
+      }
+      html += '</div>';
+    }
+  }
+  html += '</div>';
+  s.innerHTML = html;
+}
+
+function renderEditorReparto(idLabor, repartoActual){
+  const lotes = lotesActivos();
+  const rep = new Map((repartoActual||[]).map(r => [r.lote_id, r.proporcion]));
+  let html = '<h3>Editar reparto antes de aprobar</h3>';
+  for(const l of lotes){
+    const val = rep.has(l.id) ? rep.get(l.id) : '';
+    html += '<div class="row" style="margin:4px 0">';
+    html += '<label style="flex:1;margin:0"><input type="checkbox" class="ap-chk" data-labor="' + esc(idLabor) + '" data-lote="' + esc(l.id) + '"' + (rep.has(l.id)?' checked':'') + '> ' + esc(l.codigo||l.id) + '</label>';
+    html += '<input type="number" step="0.01" min="0" max="1" class="ap-prop" data-labor="' + esc(idLabor) + '" data-lote="' + esc(l.id) + '" style="width:100px" value="' + esc(val) + '">';
+    html += '</div>';
+  }
+  html += '<p><small class="hint">Las partes deben sumar 1. Vacío = deja el reparto como está.</small></p>';
+  return html;
+}
+
+function repartoEditado(idLabor){
+  const partes = [];
+  document.querySelectorAll('.ap-chk[data-labor="' + idLabor + '"]:checked').forEach(chk => {
+    const idL = chk.dataset.lote;
+    const inp = document.querySelector('.ap-prop[data-labor="' + idLabor + '"][data-lote="' + idL + '"]');
+    const p = parseFloat(inp && inp.value) || 0;
+    if(p > 0) partes.push({ lote_id: idL, proporcion: p });
+  });
+  return partes;
+}
+
+async function aprobarLabor(id){
+  if(!navigator.onLine){ toast('Sin señal. No se puede aprobar.', 'err'); return; }
+  const nuevoReparto = repartoEditado(id);
+  const suma = nuevoReparto.reduce((t,r) => t + r.proporcion, 0);
+  const cambio = {};
+  if(nuevoReparto.length > 0){
+    if(Math.abs(suma - 1) > 0.001){ toast('Las partes deben sumar 1 (ahora ' + suma.toFixed(2) + ')', 'err'); return; }
+    cambio.reparto = nuevoReparto;
+  }
+  cambio.estado = 'aprobada';
+  const r = await sb.from('labores').update(cambio).eq('id', id).select('id');
+  if(r.error){ toast(r.error.message, 'err'); return; }
+  if(!r.data || !r.data.length){ toast('No se pudo aprobar: sin permiso o ya no existe.', 'err'); return; }
+  toast('Aprobada.');
+  await refrescarIncremental();
+  renderPantalla('aprobar');
+}
+async function rechazarLabor(id){
+  if(!navigator.onLine){ toast('Sin señal. No se puede rechazar.', 'err'); return; }
+  const motivo = prompt('Motivo del rechazo:');
+  if(!motivo || !motivo.trim()) return;
+  const r = await sb.from('labores').update({ estado:'rechazada', motivo_rechazo: motivo.trim() }).eq('id', id).select('id');
+  if(r.error){ toast(r.error.message, 'err'); return; }
+  if(!r.data || !r.data.length){ toast('No se pudo rechazar.', 'err'); return; }
+  toast('Rechazada.');
+  await refrescarIncremental();
+  renderPantalla('aprobar');
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// 13. Pantalla: Revisar (bandeja de rechazos)
+// ────────────────────────────────────────────────────────────────────────────
+function renderRevisar(s){
+  const cols = ['Acción','Tabla','Registro','Motivo','Mensaje','Fecha'];
+  let html = '<div class="card"><h2>Bandeja Revisar</h2>';
+  html += '<p><small class="hint">Rechazados por el servidor. Corrija y reenvíe, o descarte.</small></p>';
+  if(!revisar.length){
+    html += '<p>No hay nada por revisar.</p>';
+  }else{
+    html += '<div class="wrap-tabla"><table>';
+    html += '<tr>' + cols.map(c => '<th>' + esc(c) + '</th>').join('') + '</tr>';
+    for(let i=0; i<revisar.length; i++){
+      const r = revisar[i];
+      const resumen = resumenPayload(r.tabla, r.payload);
+      html += '<tr class="_rej">';
+      html += '<td><div class="acciones">'
+        + '<button class="btn" onclick="reintentarRevisar(' + i + ')">Reintentar</button>'
+        + '<button class="btn gris" onclick="descartarRevisar(' + i + ')">Descartar</button>'
+        + '</div></td>';
+      html += '<td>' + esc(r.tabla) + '</td>';
+      html += '<td>' + esc(resumen) + '</td>';
+      html += '<td>' + esc(r.motivo || '') + (r.codigo?' ('+esc(r.codigo)+')':'') + '</td>';
+      html += '<td>' + esc(r.mensaje || '') + '</td>';
+      html += '<td>' + esc(new Date(r.fecha_rechazo||r.fecha).toLocaleString('es-CO')) + '</td>';
+      html += '</tr>';
+    }
+    html += '</table></div>';
+  }
+  if(descarte.length){
+    html += '<h3>Descartados (' + descarte.length + ')</h3>';
+    html += '<p><small class="hint">Quedan en este celular por si necesita consultarlos.</small></p>';
+  }
+  html += '</div>';
+  s.innerHTML = html;
+}
+
+function resumenPayload(tabla, p){
+  if(!p) return '';
+  if(tabla === 'labores') return (p.fecha||'') + ' · ' + (p.actividad_otro || 'act:' + (p.actividad_id||'').slice(0,8)) + ' · ' + (p.jornales||'') + ' jorn';
+  if(tabla === 'aportes') return (p.fecha||'') + ' · ' + (p.tipo||'') + ' · ' + fmtMoneda(p.valor);
+  if(tabla === 'animales') return (p.chapeta||'sin chapeta') + ' · ' + (p.especie||'');
+  return JSON.stringify(p).slice(0,80);
+}
+
+function reintentarRevisar(i){
+  const r = revisar[i]; if(!r) return;
+  revisar.splice(i, 1);
+  const item = {
+    id_local: uuid(),
+    tabla: r.tabla, op: r.op, id: r.id,
+    payload: r.payload, deps: r.deps || [],
+    intentos: 0, ultimoError: null, fecha: Date.now()
+  };
+  pend.push(item);
+  ultimoPend = Date.now();
+  guardarPendLocal();
+  actualizarChips();
+  toast('Reenviando…');
+  flush();
+  renderPantalla('revisar');
+}
+
+function descartarRevisar(i){
+  const r = revisar[i]; if(!r) return;
+  if(!confirm('¿Descartar este registro? Queda en el celular pero no se sube.')) return;
+  revisar.splice(i, 1);
+  descarte.push(Object.assign({}, r, { descartado_en: Date.now() }));
+  guardarPendLocal();
+  actualizarChips();
+  renderPantalla('revisar');
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// 14. Otras pantallas mínimas
+// ────────────────────────────────────────────────────────────────────────────
+function renderInversion(s){
+  if(sesion.rol !== 'admin'){ s.innerHTML = '<div class="card"><p>Solo admin.</p></div>'; return; }
+  const lotes = data.lotes_negocio || [];
+  let html = '<div class="card"><h2>Inversión por lote</h2>';
+  html += '<p><small class="hint">Detalle en dos niveles: lote → persona. Se llena cuando la vista v_capital_lote_persona esté disponible en línea.</small></p>';
+  if(!lotes.length) html += '<p>Sin lotes.</p>';
+  else{
+    html += '<div class="wrap-tabla"><table><tr><th>Lote</th><th>Cabezas</th><th>Estado</th><th>Contrato</th></tr>';
+    for(const l of lotes){
+      const c = (data.contratos_lote||[]).find(x => x.lote_negocio_id === l.id);
+      html += '<tr><td>' + esc(l.codigo||l.id) + '</td><td>' + fmtNum(l.cabezas_entrada) + '</td><td>' + esc(l.estado||'') + '</td><td>' + (c ? esc(c.proporcion_empresa + '/' + c.proporcion_inversionista) : 's/d') + '</td></tr>';
+    }
+    html += '</table></div>';
+  }
+  html += '</div>';
+  s.innerHTML = html;
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Pantalla: Personas y usuarios (admin, solo en línea)
+// ────────────────────────────────────────────────────────────────────────────
+function renderPersonas(s){
+  if(sesion.rol !== 'admin'){ s.innerHTML = '<div class="card"><p>Solo admin.</p></div>'; return; }
+  const enLinea = navigator.onLine;
+  const personas = (data.personas||[]).filter(p => !p.deleted_at)
+    .sort((a,b) => String(a.nombre||'').localeCompare(String(b.nombre||'')));
+
+  let html = '<div class="card"><h2>Nueva persona</h2>';
+  if(!enLinea) html += '<p style="color:var(--rojo)">Sin señal. Solo en línea.</p>';
+  html += '<label>Nombre completo</label><input id="p-nombre">';
+  html += '<label>Usuario (sin espacios)</label><input id="p-usuario">';
+  html += '<label>Clave (mínimo 8)</label><input id="p-clave" type="password">';
+  html += '<div class="flex"><label style="flex:1"><input type="checkbox" id="p-trabajo" checked> Aporta trabajo</label>';
+  html += '<label style="flex:1"><input type="checkbox" id="p-dinero"> Aporta dinero</label></div>';
+  html += '<button class="btn btn-grande" ' + (enLinea?'':'disabled') + ' onclick="crearPersona()">Crear</button>';
+  html += '<p id="p-msg" style="color:var(--rojo);margin-top:8px"></p>';
+  html += '</div>';
+
+  html += '<div class="card"><h2>Personas (' + personas.length + ')</h2>';
+  html += '<div class="wrap-tabla"><table><tr><th>Acción</th><th>Nombre</th><th>Rol</th><th>Trabajo</th><th>Dinero</th><th>Cuenta</th></tr>';
+  for(const p of personas){
+    html += '<tr>';
+    html += '<td><div class="acciones">';
+    html += '<button class="btn sec" ' + (enLinea?'':'disabled') + ' onclick="darAcceso(\'' + esc(p.id) + '\')">Dar acceso</button>';
+    html += '<button class="btn warn" ' + (enLinea?'':'disabled') + ' onclick="reiniciarClave(\'' + esc(p.id) + '\')">Reiniciar clave</button>';
+    if(p.activo === false){
+      html += '<button class="btn" ' + (enLinea?'':'disabled') + ' onclick="reactivarPersona(\'' + esc(p.id) + '\')">Reactivar</button>';
+    }else{
+      html += '<button class="btn err" ' + (enLinea?'':'disabled') + ' onclick="desactivarPersona(\'' + esc(p.id) + '\')">Desactivar</button>';
+    }
+    html += '</div></td>';
+    html += '<td>' + esc(p.nombre||'') + (p.activo===false?' <span class="tag anulada">inactivo</span>':'') + '</td>';
+    html += '<td>' + esc(p.rol||'') + '</td>';
+    html += '<td>' + (p.aporta_trabajo?'sí':'no') + '</td>';
+    html += '<td>' + (p.aporta_dinero?'sí':'no') + '</td>';
+    html += '<td>' + (p.user_id ? 'sí' : 'no') + '</td>';
+    html += '</tr>';
+  }
+  html += '</table></div></div>';
+
+  s.innerHTML = html;
+}
+
+async function invocarUsuarios(body, exito){
+  const r = await sb.functions.invoke('usuarios', { body });
+  if(r.error){
+    const m = (r.data && r.data.error) || r.error.message || 'Error';
+    toast(m, 'err'); return null;
+  }
+  if(r.data && r.data.ok === false){ toast(r.data.error || 'No se pudo', 'err'); return null; }
+  toast(exito || 'Listo.');
+  await refrescarIncremental();
+  renderPantalla('personas');
+  return r.data;
+}
+
+async function crearPersona(){
+  if(!navigator.onLine){ toast('Sin señal.', 'err'); return; }
+  const nombre = $('p-nombre').value.trim();
+  const usuario = $('p-usuario').value.trim();
+  const clave = $('p-clave').value;
+  const trab = $('p-trabajo').checked;
+  const din = $('p-dinero').checked;
+  const msg = $('p-msg'); msg.textContent = '';
+  if(nombre.length < 2){ msg.textContent = 'Escriba el nombre.'; return; }
+  if(!usuario){ msg.textContent = 'Escriba el usuario.'; return; }
+  if(clave.length < 8){ msg.textContent = 'Clave mínima de 8 caracteres.'; return; }
+  const ok = await invocarUsuarios({
+    accion:'crear',
+    nombre, usuario, clave,
+    aporta_trabajo: trab, aporta_dinero: din
+  }, 'Persona creada.');
+  if(ok){
+    $('p-nombre').value = ''; $('p-usuario').value = ''; $('p-clave').value = '';
+    $('p-trabajo').checked = true; $('p-dinero').checked = false;
+  }
+}
+
+async function darAcceso(idPersona){
+  if(!navigator.onLine){ toast('Sin señal.', 'err'); return; }
+  const usuario = prompt('Usuario (o correo) para esta persona:');
+  if(!usuario || !usuario.trim()) return;
+  const clave = prompt('Clave nueva (mínimo 8):');
+  if(!clave || clave.length < 8){ toast('Clave insuficiente.', 'err'); return; }
+  await invocarUsuarios({ accion:'dar_acceso', persona_id:idPersona, usuario:usuario.trim(), clave }, 'Acceso creado.');
+}
+
+async function reiniciarClave(idPersona){
+  if(!navigator.onLine){ toast('Sin señal.', 'err'); return; }
+  const clave = prompt('Nueva clave (mínimo 8):');
+  if(!clave || clave.length < 8){ toast('Clave insuficiente.', 'err'); return; }
+  await invocarUsuarios({ accion:'restablecer_clave', persona_id:idPersona, clave }, 'Clave restablecida.');
+}
+
+async function desactivarPersona(idPersona){
+  if(!navigator.onLine){ toast('Sin señal.', 'err'); return; }
+  if(!confirm('¿Desactivar? La persona no podrá entrar; su capital queda intacto.')) return;
+  await invocarUsuarios({ accion:'desactivar', persona_id:idPersona }, 'Desactivada.');
+}
+
+async function reactivarPersona(idPersona){
+  if(!navigator.onLine){ toast('Sin señal.', 'err'); return; }
+  await invocarUsuarios({ accion:'reactivar', persona_id:idPersona }, 'Reactivada.');
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Pantalla: Configuración (admin, solo en línea)
+// ────────────────────────────────────────────────────────────────────────────
+function renderConfig(s){
+  if(sesion.rol !== 'admin'){ s.innerHTML = '<div class="card"><p>Solo admin.</p></div>'; return; }
+  const enLinea = navigator.onLine;
+  const personas = (data.personas||[]).filter(p => !p.deleted_at && p.id !== sesion.persona_id)
+    .sort((a,b) => String(a.nombre||'').localeCompare(String(b.nombre||'')));
+  const cfg = data.config || {};
+  const actual = cfg.aprobador_admin_persona_id || '';
+  const transparencia = cfg.transparencia_socios === false ? false : true;
+
+  let html = '<div class="card"><h2>Configuración</h2>';
+  if(!enLinea) html += '<p style="color:var(--rojo)">Sin señal. Solo en línea.</p>';
+
+  html += '<label>Quién aprueba las labores del admin</label>';
+  html += '<select id="cfg-aprob"><option value="">— sin asignar —</option>';
+  for(const p of personas){
+    const sel = p.id === actual ? ' selected' : '';
+    html += '<option value="' + esc(p.id) + '"' + sel + '>' + esc(p.nombre) + '</option>';
+  }
+  html += '</select>';
+  html += '<button class="btn" ' + (enLinea?'':'disabled') + ' onclick="guardarAprobadorAdmin()">Guardar</button>';
+
+  html += '<h3 style="margin-top:16px">Transparencia entre socios</h3>';
+  html += '<label><input type="checkbox" id="cfg-trans"' + (transparencia?' checked':'') + '> Los socios ven el capital de todos</label>';
+  html += '<button class="btn" ' + (enLinea?'':'disabled') + ' onclick="guardarTransparencia()">Guardar</button>';
+
+  html += '<h3 style="margin-top:16px">Otros valores</h3>';
+  html += '<div class="wrap-tabla"><table><tr><th>Clave</th><th>Valor</th></tr>';
+  for(const k of Object.keys(cfg).sort()){
+    if(k.startsWith('codigo')) continue;
+    html += '<tr><td>' + esc(k) + '</td><td>' + esc(String(cfg[k])) + '</td></tr>';
+  }
+  html += '</table></div>';
+  html += '</div>';
+  s.innerHTML = html;
+}
+
+async function guardarClaveConfig(clave, valor, ok){
+  if(!navigator.onLine){ toast('Sin señal.', 'err'); return; }
+  const r = await sb.from('config').update({ valor }).eq('clave', clave).select('clave');
+  if(r.error){ toast(r.error.message, 'err'); return; }
+  if(!r.data || !r.data.length){
+    // Puede que no exista aún la fila: intentar insertar
+    const ins = await sb.from('config').insert({ clave, valor });
+    if(ins.error){ toast(ins.error.message, 'err'); return; }
+  }
+  toast(ok || 'Guardado.');
+  await refrescarIncremental();
+  renderPantalla('config');
+}
+
+async function guardarAprobadorAdmin(){
+  const v = $('cfg-aprob').value || null;
+  await guardarClaveConfig('aprobador_admin_persona_id', v, 'Aprobador del admin guardado.');
+}
+async function guardarTransparencia(){
+  const v = $('cfg-trans').checked;
+  await guardarClaveConfig('transparencia_socios', v, 'Transparencia guardada.');
+}
+
+function renderMiCuenta(s){
+  const mias = misLabores().sort((a,b) => String(b.fecha).localeCompare(String(a.fecha)));
+  let html = '<div class="card"><h2>Mis labores</h2>';
+  if(!mias.length) html += '<p>Sin labores registradas.</p>';
+  else{
+    html += '<div class="wrap-tabla"><table><tr><th>Estado</th><th>Fecha</th><th>Actividad</th><th>Jornales</th><th>Modalidad</th></tr>';
+    for(const l of mias){
+      const acti = l.actividad_id ? nombreActividad(l.actividad_id) : (l.actividad_otro || 's/d');
+      html += '<tr' + (l._pend?' class="_pend"':'') + '>';
+      html += '<td><span class="tag ' + esc(l.estado||'') + '">' + esc(l.estado||'') + '</span>' + (l._pend?' <span class="tag pend">sin subir</span>':'') + '</td>';
+      html += '<td>' + esc(fmtFecha(l.fecha)) + '</td>';
+      html += '<td>' + esc(acti) + '</td>';
+      html += '<td>' + fmtNum(l.jornales) + '</td>';
+      html += '<td>' + esc(l.modalidad||'') + '</td>';
+      html += '</tr>';
+    }
+    html += '</table></div>';
+  }
+  html += '</div>';
+  s.innerHTML = html;
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// 15. Arranque
+// ────────────────────────────────────────────────────────────────────────────
+async function arrancar(){
+  $('i-ver').textContent = APP_VER;
+  $('e-ver').textContent = APP_VER;
+  conectarSB();
+  window.addEventListener('online', () => { actualizarChips(); flush(); });
+  window.addEventListener('offline', actualizarChips);
+  document.addEventListener('visibilitychange', () => {
+    if(!document.hidden){ actualizarChips(); flush(); }
+  });
+  if(timerReintento) clearInterval(timerReintento);
+  timerReintento = setInterval(() => {
+    if(!document.hidden && navigator.onLine) flush();
+  }, REINTENTO_MS);
+
+  registrarSW();
+
+  // Sesión previa
+  const sesionGuardada = leerClave(CLAVE_BASE + '.sesion', null);
+  try{
+    const s = await sb.auth.getSession();
+    if(s.data.session){
+      if(sesionGuardada){ sesion = sesionGuardada; }
+      else{
+        const v = await vincularMiCuenta();
+        if(v.ok) sesion = { user_id:s.data.session.user.id, persona_id:v.persona_id, rol:v.rol, nombre:v.nombre };
+      }
+    }
+  }catch(_){}
+
+  if(sesion){ await arrancarConSesion(); return; }
+
+  // Sin sesión: ¿instalado?
+  try{
+    const est = await estadoInstalacion();
+    dominioUsuarios = est.dominio_usuarios || dominioUsuarios;
+    if(!est.instalado) mostrarInstalar();
+    else mostrarEntrar();
+  }catch(e){
+    // Sin señal: mostrar entrar de todos modos
+    mostrarEntrar();
+    toast('Sin conexión al servidor. Puede intentar entrar con datos guardados.', 'warn');
+  }
+}
+
+function mostrarInstalar(){ ocultarTodo(); $('pantalla-instalar').classList.remove('hidden'); }
+function mostrarEntrar(){ ocultarTodo(); $('pantalla-entrar').classList.remove('hidden'); }
+
+async function arrancarConSesion(){
+  cargarLocal();
+  $('cabecera').classList.remove('hidden');
+  pintarTabs();
+  actualizarChips();
+  irA('inicio');
+  if(navigator.onLine){
+    if(debeReconciliar()) await refrescarCompleto();
+    else await refrescarIncremental();
+    flush();
+  }
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// 16. Service worker: registro y aviso de nueva versión
+// ────────────────────────────────────────────────────────────────────────────
+function registrarSW(){
+  if(!('serviceWorker' in navigator)) return;
+  navigator.serviceWorker.register('sw.js').then(reg => {
+    regSW = reg;
+    reg.addEventListener('updatefound', () => {
+      const nw = reg.installing;
+      if(!nw) return;
+      nw.addEventListener('statechange', () => {
+        if(nw.state === 'installed' && navigator.serviceWorker.controller){
+          $('banner-version').classList.remove('hidden');
+        }
+      });
+    });
+  }).catch(e => console.error('SW', e));
+}
+function actualizarApp(){
+  if(regSW && regSW.waiting){ regSW.waiting.postMessage('skipWaiting'); }
+  setTimeout(() => location.reload(), 300);
+}
+
+// Exponer para pruebas y consola
+window.elbledo = {
+  APP_VER, get sesion(){return sesion;}, set sesion(v){sesion=v;},
+  get data(){return data;}, set data(v){data=v;},
+  get pend(){return pend;}, set pend(v){pend=v;},
+  get revisar(){return revisar;}, set revisar(v){revisar=v;},
+  get descarte(){return descarte;}, set descarte(v){descarte=v;},
+  get sync(){return sync;}, set sync(v){sync=v;},
+  get sb(){return sb;}, set sb(v){sb=v;},
+  get flushing(){return flushing;}, get refrescando(){return refrescando;},
+  encolar, flush, refrescarIncremental, refrescarCompleto,
+  cargarLocal, guardarPendLocal, guardarDataLocal,
+  clasificarRespuesta, aCorreo, uuid, hoyBogota, ahoraBogotaISO,
+  estadoDataVacio, claveLocal, aplicarLocal, arrastrarDependientes
+};
+
+if(typeof document !== 'undefined' && document.addEventListener){
+  document.addEventListener('DOMContentLoaded', arrancar);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,26 @@
+{
+  "name": "El Bledo — Ganadería",
+  "short_name": "El Bledo",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f4f2ec",
+  "theme_color": "#2b6a4a",
+  "lang": "es-CO",
+  "description": "Administración ganadera de la finca El Bledo (CiberSacha).",
+  "icons": [
+    {
+      "src": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' fill='%232b6a4a'/><text x='50%25' y='55%25' font-size='140' text-anchor='middle' dominant-baseline='middle'>%F0%9F%90%84</text></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' fill='%232b6a4a'/><text x='50%25' y='55%25' font-size='380' text-anchor='middle' dominant-baseline='middle'>%F0%9F%90%84</text></svg>",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
