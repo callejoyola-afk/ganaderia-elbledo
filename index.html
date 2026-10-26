@@ -56,7 +56,7 @@ input,select,textarea{font-family:inherit;font-size:18px}
 <script>
 'use strict';
 
-var VERSION = '1.1.0';
+var VERSION = '1.1.1';
 var SB_URL = 'https://hwvufzeayumqjxjtebvp.supabase.co';
 var TOPE_H = 7;
 var LS_KEY='eb_key', LS_YO='eb_yo', LS_DATOS='eb_datos', LS_COLA='eb_cola', LS_DESC='eb_desc', LS_SYNC='eb_sync', LS_DOM='eb_dom';
@@ -90,7 +90,7 @@ var yo = null, dominio = '';
 var datos = {actividades:[],potreros:[],labores:[],personas:[],ganadoLotes:[],ganadoHist:{},capitalPersona:[],stock:[],config:{},jornales:[],alertas:[]};
 var cola = [], descarte = [];
 var ultimoSync = {};
-var E = {pantalla:'cargando',tab:'hoy',subAg:null,paso:'inicio',selAct:null,selPot:null,rechazando:null,corrigiendo:null,gAcc:null,gLote:null,gVer:null,gNuevo:false,movProd:null,movTipo:null,selSocio:null,f:{},aviso:'',avisoOk:false};
+var E = {pantalla:'cargando',tab:'hoy',subAg:null,paso:'inicio',selAct:null,selPot:null,rechazando:null,corrigiendo:null,desactivando:null,gAcc:null,gLote:null,gVer:null,gNuevo:false,movProd:null,movTipo:null,selSocio:null,f:{},aviso:'',avisoOk:false};
 var flushing = false, timerR = 0;
 
 /* ─── Utilidades ─── */
@@ -352,14 +352,16 @@ function rSocioHoy(){
 
 function rSocioInv(){
   var cp=yo?datos.capitalPersona.find(function(x){return x.persona_id===yo.persona_id}):null;
-  var apr=cp?(cp.capital||0):0,pen=cp?(cp.sin_asignar||0):0;
+  var apr=cp?(cp.capital||0):0;
+  var labsPend=datos.labores.filter(function(l){return yo&&l.persona_id===yo.persona_id&&l.estado==='pendiente'&&l.fin&&!l.deleted_at});
+  var hPend=labsPend.reduce(function(t,l){return t+minEntre(l.inicio,l.fin)},0);
   var labs=datos.labores.filter(function(l){return yo&&l.persona_id===yo.persona_id&&!l.deleted_at}).sort(function(a,b){return b.fecha>a.fecha?1:-1}).slice(0,20);
   var h='<div class="col" style="gap:14px"><div style="background:#1E6B3A;color:#FFF;border-radius:24px;padding:22px 20px"><span style="font-size:16px">Mi inversión aprobada</span><div style="font-size:40px;font-weight:700">'+pesos(apr)+'</div></div>';
-  if(pen>0)h+='<div style="background:#FBEBD0;border-radius:20px;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;gap:12px"><span><span style="font-size:16px;color:#6B4A10">Por aprobar</span><br><span style="font-size:14px;color:#6B4A10">Cuenta cuando el administrador lo apruebe</span></span><span style="font-size:24px;font-weight:700;color:#4A3209">'+pesos(pen)+'</span></div>';
+  if(hPend>0)h+='<div style="background:#FBEBD0;border-radius:20px;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;gap:12px"><span><span style="font-size:16px;color:#6B4A10">Por aprobar</span><br><span style="font-size:14px;color:#6B4A10">'+labsPend.length+' labor(es) pendiente(s)</span></span><span style="font-size:24px;font-weight:700;color:#4A3209">'+durM(hPend)+'</span></div>';
   if(labs.length){
     h+='<h2 style="margin:8px 0 0;font-size:20px">Mis últimas labores</h2>';
     labs.forEach(function(l){
-      var est=l.estado||'pendiente',cls=est==='aprobado'?'chip-ok':(est==='rechazado'?'chip-no':'chip-pend'),txt=est==='aprobado'?'Aprobado':(est==='rechazado'?'Rechazado':'Por aprobar');
+      var est=l.estado||'pendiente',cls=est==='aprobada'?'chip-ok':(est==='rechazada'?'chip-no':'chip-pend'),txt=est==='aprobada'?'Aprobada':(est==='rechazada'?'Rechazada':'Por aprobar');
       var det=(l.inicio&&l.fin?durM(minEntre(l.inicio,l.fin))+' · ':'')+nomAct(l.actividad_id)+' · '+nomPot(l.potrero_id);
       h+='<div class="tarj" style="padding:14px 16px"><div class="entre"><span style="font-size:17px;font-weight:700">'+esc(fechaTxt(l.fecha))+'</span><span class="chip '+cls+'">'+esc(txt)+'</span></div><div class="sub">'+esc(det)+'</div>';
       if(l.motivo_rechazo)h+='<div style="font-size:15px;color:#8A2A1B;margin-top:4px">Motivo: '+esc(l.motivo_rechazo)+'</div>';
@@ -465,13 +467,15 @@ function rGanado(sl){
     '<span><span style="font-size:15px">Lotes activos</span><div style="font-size:36px;font-weight:700">'+actN+'</div></span>'+
     '<span><span style="font-size:15px">Animales en finca</span><div style="font-size:36px;font-weight:700">'+totA+'</div></span></div>';
   lotes.forEach(function(g){
-    var cerr=(g.activos||0)===0&&(g.vendidos||0)>0,chipT=cerr?'Vendido':((g.activos||0)>0?'Activo':'Sin animales'),chipC=cerr?'chip-off':((g.activos||0)>0?'chip-ok':'chip-pend');
+    var cerr=(g.activos||0)===0&&(g.cabezas_vendidas||0)>0,chipT=cerr?'Vendido':((g.activos||0)>0?'Activo':'Sin animales'),chipC=cerr?'chip-off':((g.activos||0)>0?'chip-ok':'chip-pend');
     var conT=g.pct_empresa?'Contrato '+g.pct_empresa+'/'+(100-g.pct_empresa):'Sin contrato';
     var acc=E.gAcc&&E.gLote===g.lote_id?E.gAcc:null;
     h+='<div class="tarj col"><div class="entre"><span><span style="font-size:20px;font-weight:700">'+esc(g.nombre||g.lote_id)+'</span><br><span style="font-size:14px;color:#5B6B5F">'+esc(conT)+'</span></span><span class="chip '+chipC+'">'+esc(chipT)+'</span></div>'+
       '<div class="g3"><span style="background:#F4F1E8;border-radius:14px;padding:10px"><span style="font-size:13px;color:#5B6B5F">Animales</span><div style="font-size:22px;font-weight:700">'+(g.activos||0)+'</div></span>'+
-      '<span style="background:#F4F1E8;border-radius:14px;padding:10px"><span style="font-size:13px;color:#5B6B5F">Peso prom.</span><div style="font-size:22px;font-weight:700">'+(g.ultimo_peso_promedio?kgT(g.ultimo_peso_promedio):'s/d')+'</div></span>'+
-      '<span style="background:#F4F1E8;border-radius:14px;padding:10px"><span style="font-size:13px;color:#5B6B5F">Ganan al día</span><div style="font-size:22px;font-weight:700">'+(g.gmd_kg?Math.round(g.gmd_kg*1000)+' g':'s/d')+'</div></span></div>';
+      '<span style="background:#F4F1E8;border-radius:14px;padding:10px"><span style="font-size:13px;color:#5B6B5F">Peso prom.</span><div style="font-size:22px;font-weight:700">'+(g.peso_prom_actual?kgT(g.peso_prom_actual):'s/d')+'</div></span>'+
+      '<span style="background:#F4F1E8;border-radius:14px;padding:10px"><span style="font-size:13px;color:#5B6B5F">Ganan al día</span><div style="font-size:22px;font-weight:700">'+(g.gmd_kg?Math.round(g.gmd_kg*1000)+' g':'s/d')+'</div></span></div>'+
+      '<div class="g2"><span style="background:#F4F1E8;border-radius:14px;padding:10px"><span style="font-size:13px;color:#5B6B5F">Valor de compra</span><div style="font-size:18px;font-weight:700">'+(g.valor_compra?pesos(g.valor_compra):'s/d')+'</div></span>'+
+      '<span style="background:#F4F1E8;border-radius:14px;padding:10px"><span style="font-size:13px;color:#5B6B5F">Vendido hasta hoy</span><div style="font-size:18px;font-weight:700">'+(g.valor_ventas?pesos(g.valor_ventas):'s/d')+'</div></span></div>';
     if(!acc&&!sl){
       h+='<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">'+
         '<button data-a="g_abrir" data-p="entrada" data-p2="'+g.lote_id+'" style="min-height:56px;border-radius:14px;border:0;background:#DDEEDF;color:#14492A;font-size:14px;font-weight:700">+ Entraron</button>'+
@@ -557,6 +561,11 @@ function rSocios(sl){
       h+='<div class="g3" style="gap:6px">';ROLES.forEach(function(r){var on=p.rol===r[0];h+='<button data-a="cambiar_rol" data-p="'+p.id+'" data-p2="'+r[0]+'" style="min-height:46px;border-radius:12px;font-size:15px;font-weight:700;color:#1B2A1F;'+(on?'background:#DDEEDF;border:3px solid #1E6B3A':'background:#FFF;border:1px solid #B9B2A0')+'">'+r[1]+'</button>'});
       h+='</div><div class="g2"><button data-a="nueva_clave" data-p="'+p.id+'" style="min-height:48px;border-radius:14px;border:1px solid #B9B2A0;background:#F4F1E8;font-size:16px;color:#1B2A1F">Nueva clave</button>'+
         '<button data-a="toggle_pers" data-p="'+p.id+'" style="min-height:48px;border-radius:14px;font-size:16px;font-weight:700;'+(act?'border:2px solid #8A2A1B;background:transparent;color:#8A2A1B':'border:0;background:#1E6B3A;color:#FFF')+'">'+(act?'Desactivar':'Activar')+'</button></div>';
+      if(E.desactivando===p.id)h+='<div class="col" style="gap:6px;background:#FDF0E0;border-radius:14px;padding:12px"><span style="font-size:15px;font-weight:700;color:#6B4A10">¿Por qué lo desactiva?</span>'+
+        '<button data-a="desact_motivo" data-p="'+p.id+'" data-p2="Ya no trabaja" style="min-height:44px;border-radius:12px;border:1px solid #B9B2A0;background:#FFF;font-size:15px;color:#1B2A1F">Ya no trabaja</button>'+
+        '<button data-a="desact_motivo" data-p="'+p.id+'" data-p2="Pidió retirarse" style="min-height:44px;border-radius:12px;border:1px solid #B9B2A0;background:#FFF;font-size:15px;color:#1B2A1F">Pidió retirarse</button>'+
+        '<button data-a="desact_motivo" data-p="'+p.id+'" data-p2="Otro" style="min-height:44px;border-radius:12px;border:1px solid #B9B2A0;background:#FFF;font-size:15px;color:#1B2A1F">Otro</button>'+
+        '<button data-a="cancel_desact" style="height:40px;border:0;background:transparent;font-size:14px;color:#5B6B5F;text-decoration:underline">Cancelar</button></div>';
     }
     if(p._claveNueva)h+='<span style="font-size:15px;background:#DDEEDF;color:#14492A;border-radius:10px;padding:8px 10px">Clave: <b>'+esc(p._claveNueva)+'</b>. Désela en persona.</span>';
     h+='</div>';
@@ -573,7 +582,7 @@ function rBodega(sl){
     '</div><button class="btn-v" style="height:52px" data-a="agregar_prod">Agregar producto</button></div>';
   prods.forEach(function(p){
     var mov=E.movProd===p.producto_id;
-    h+='<div class="tarj col"><div class="entre"><span style="font-size:18px;font-weight:700">'+esc(p.nombre)+'</span><span style="font-size:18px"><b>'+(p.stock_actual!=null?p.stock_actual:0)+'</b> '+esc(p.unidad)+'</span></div>';
+    h+='<div class="tarj col"><div class="entre"><span style="font-size:18px;font-weight:700">'+esc(p.nombre)+'</span><span style="font-size:18px"><b>'+(p.stock!=null?p.stock:0)+'</b> '+esc(p.unidad)+'</span></div>';
     if(!mov&&!sl)h+='<div class="g2"><button data-a="inv_abrir" data-p="'+p.producto_id+'" data-p2="entrada" style="min-height:48px;border-radius:14px;border:0;background:#DDEEDF;color:#14492A;font-size:17px;font-weight:700">+ Entró</button><button data-a="inv_abrir" data-p="'+p.producto_id+'" data-p2="salida" style="min-height:48px;border-radius:14px;border:0;background:#FBEBD0;color:#4A3209;font-size:17px;font-weight:700">− Salió</button></div>';
     if(mov)h+='<div class="col" style="gap:8px"><span style="font-size:16px;font-weight:700">'+(E.movTipo==='entrada'?'¿Cuánto entró?':'¿Cuánto salió?')+'</span><div class="g4">'+
       [1,5,10,25].map(function(n){return'<button data-a="inv_cant" data-p="'+p.producto_id+'" data-p2="'+n+'" style="height:52px;border-radius:14px;border:1px solid #B9B2A0;background:#F4F1E8;font-size:18px;font-weight:700;color:#1B2A1F">'+n+'</button>'}).join('')+
@@ -626,11 +635,11 @@ $app.addEventListener('click',function(e){
   case'sel_pot':E.selPot=p;E.paso='confirmar';render();return;
   case'empezar':hEmpezar();return;
   case'terminar':hTerminar();return;
-  case'aprobar_lab':encolar('labores','editar',p,{estado:'aprobado'});E.aviso='Aprobada.';E.avisoOk=true;return;
-  case'aprobar_todas':datos.labores.filter(function(l){return l.estado==='pendiente'&&l.fin&&!l.deleted_at}).forEach(function(l){encolar('labores','editar',l.id,{estado:'aprobado'})});E.aviso='Todas aprobadas.';E.avisoOk=true;return;
+  case'aprobar_lab':encolar('labores','editar',p,{estado:'aprobada'});E.aviso='Aprobada.';E.avisoOk=true;return;
+  case'aprobar_todas':datos.labores.filter(function(l){return l.estado==='pendiente'&&l.fin&&!l.deleted_at}).forEach(function(l){encolar('labores','editar',l.id,{estado:'aprobada'})});E.aviso='Todas aprobadas.';E.avisoOk=true;return;
   case'ini_rech':E.rechazando=p;E.corrigiendo=null;E.aviso='';render();return;
   case'cancel_rech':E.rechazando=null;render();return;
-  case'rechazar':encolar('labores','editar',p,{estado:'rechazado',motivo_rechazo:p2||btn.textContent.trim()});E.rechazando=null;E.aviso='Rechazada.';return;
+  case'rechazar':encolar('labores','editar',p,{estado:'rechazada',motivo_rechazo:p2||btn.textContent.trim()});E.rechazando=null;E.aviso='Rechazada.';return;
   case'ini_cor':var lab=datos.labores.find(function(l){return l.id===p});E.corrigiendo=p;E.rechazando=null;E.f.f_cor_ini=lab&&lab.inicio?lab.inicio.slice(0,16):'';E.f.f_cor_fin=lab&&lab.fin?lab.fin.slice(0,16):'';render();return;
   case'cancel_cor':E.corrigiendo=null;render();return;
   case'guardar_cor':var ini=E.f.f_cor_ini,fin=E.f.f_cor_fin;if(!ini||!fin){E.aviso='Escriba las dos horas.';render();return}encolar('labores','editar',p,{inicio:new Date(ini).toISOString(),fin:new Date(fin).toISOString()});E.corrigiendo=null;E.aviso='Horario corregido.';return;
@@ -650,7 +659,9 @@ $app.addEventListener('click',function(e){
   case'crear_socio':hCrearSocio();return;
   case'cambiar_rol':hCambiarRol(p,p2);return;
   case'nueva_clave':hNuevaClave(p);return;
-  case'toggle_pers':hTogglePers(p);return;
+  case'toggle_pers':if(datos.personas.find(function(x){return x.id===p&&x.activo!==false})){E.desactivando=p;render()}else{hReactivar(p)}return;
+  case'desact_motivo':hDesactivar(p,p2);return;
+  case'cancel_desact':E.desactivando=null;render();return;
   case'sel_un':E.f.f_iun=p;render();return;
   case'agregar_prod':hAgregarProd();return;
   case'inv_abrir':E.movProd=p;E.movTipo=p2;E.aviso='';render();return;
@@ -774,37 +785,44 @@ function hCambiarRol(id,rol){
 }
 function hNuevaClave(id){
   var c=genClave();E.aviso='Cambiando clave…';render();
-  var p=datos.personas.find(function(x){return x.id===id}),u=p?p.email.split('@')[0]:'';
-  sb.functions.invoke('usuarios',{body:{accion:'restablecer_clave',usuario:u,clave:c}}).then(function(r){
+  var p=datos.personas.find(function(x){return x.id===id});
+  sb.functions.invoke('usuarios',{body:{accion:'restablecer_clave',persona_id:id,clave:c}}).then(function(r){
     if(r.error||(r.data&&r.data.error)){E.aviso=(r.data&&r.data.error)||r.error.message||'Error.';render();return}
     if(p)p._claveNueva=c;E.aviso='Clave: '+c+'. Désela en persona.';E.avisoOk=true;render();
   }).catch(function(e){E.aviso=e.message;render()});
 }
-function hTogglePers(id){
-  var p=datos.personas.find(function(x){return x.id===id});if(!p)return;
-  var acc=p.activo!==false?'desactivar':'reactivar',u=p.email?p.email.split('@')[0]:'';
-  E.aviso='Procesando…';render();
-  sb.functions.invoke('usuarios',{body:{accion:acc,usuario:u}}).then(function(r){
+function hDesactivar(id,motivo){
+  E.aviso='Procesando…';E.desactivando=null;render();
+  sb.functions.invoke('usuarios',{body:{accion:'desactivar',persona_id:id,motivo:motivo}}).then(function(r){
     if(r.error||(r.data&&r.data.error)){E.aviso=(r.data&&r.data.error)||r.error.message||'Error.';render();return}
-    p.activo=acc==='reactivar';E.aviso=p.activo?p.nombre+' activado.':p.nombre+' desactivado.';E.avisoOk=true;guardar();render();
+    var p=datos.personas.find(function(x){return x.id===id});if(p)p.activo=false;
+    E.aviso=p?p.nombre+' desactivado.':'Desactivado.';E.avisoOk=true;guardar();render();
+  }).catch(function(e){E.aviso=e.message;render()});
+}
+function hReactivar(id){
+  E.aviso='Procesando…';render();
+  sb.functions.invoke('usuarios',{body:{accion:'reactivar',persona_id:id}}).then(function(r){
+    if(r.error||(r.data&&r.data.error)){E.aviso=(r.data&&r.data.error)||r.error.message||'Error.';render();return}
+    var p=datos.personas.find(function(x){return x.id===id});if(p)p.activo=true;
+    E.aviso=p?p.nombre+' activado.':'Activado.';E.avisoOk=true;guardar();render();
   }).catch(function(e){E.aviso=e.message;render()});
 }
 function hAgregarProd(){
   var n=(E.f.f_inom||'').trim();if(!n){E.aviso='Escriba el nombre.';render();return}
   var id=uuid(),un=E.f.f_iun||'kg';
   encolar('productos','crear',id,{nombre:n,unidad:un});
-  datos.stock.push({producto_id:id,nombre:n,unidad:un,stock_actual:0});
+  datos.stock.push({producto_id:id,nombre:n,unidad:un,stock:0});
   E.f.f_inom='';E.aviso='«'+n+'» agregado.';E.avisoOk=true;guardar();render();
 }
 function hInvCant(prodId,cant){
-  var tipo=E.movTipo,tipoDb=tipo==='entrada'?'entrada':'salida',motivo=tipo==='entrada'?'compra':'uso';
+  var tipo=E.movTipo,tipoDb=tipo==='entrada'?'entrada':'salida',motivo=tipo==='entrada'?'compra':'labor';
   encolar('movimientos_inventario','crear',uuid(),{producto_id:prodId,tipo:tipoDb,motivo:motivo,fecha:fechaBog(),cantidad:cant});
   var pr=datos.stock.find(function(x){return x.producto_id===prodId});
-  if(pr)pr.stock_actual=(pr.stock_actual||0)+(tipo==='entrada'?cant:-cant);
+  if(pr)pr.stock=(pr.stock||0)+(tipo==='entrada'?cant:-cant);
   E.aviso=(tipo==='entrada'?'Entraron ':'Salieron ')+cant+(pr?' '+pr.unidad+' de '+pr.nombre:'')+'.'  ;E.avisoOk=true;
   E.movProd=null;E.movTipo=null;guardar();render();
 }
-function hSalir(){if(sb)sb.auth.signOut().catch(function(){});yo=null;localStorage.removeItem(LS_YO);E={pantalla:'login',tab:'hoy',subAg:null,paso:'inicio',selAct:null,selPot:null,rechazando:null,corrigiendo:null,gAcc:null,gLote:null,gVer:null,gNuevo:false,movProd:null,movTipo:null,selSocio:null,f:{},aviso:'',avisoOk:false};render()}
+function hSalir(){if(sb)sb.auth.signOut().catch(function(){});yo=null;localStorage.removeItem(LS_YO);E={pantalla:'login',tab:'hoy',subAg:null,paso:'inicio',selAct:null,selPot:null,rechazando:null,corrigiendo:null,gAcc:null,gLote:null,gVer:null,gNuevo:false,movProd:null,movTipo:null,selSocio:null,desactivando:null,f:{},aviso:'',avisoOk:false};render()}
 
 /* ─── Arranque ─── */
 function arrancar(){
