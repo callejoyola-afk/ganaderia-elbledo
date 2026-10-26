@@ -56,10 +56,11 @@ input,select,textarea{font-family:inherit;font-size:18px}
 <script>
 'use strict';
 
-var VERSION = '1.1.2';
+var VERSION = '1.1.3';
 var SB_URL = 'https://hwvufzeayumqjxjtebvp.supabase.co';
+var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh3dnVmemVheXVtcWp4anRlYnZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkwNzYzMTUsImV4cCI6MjEwNDY1MjMxNX0.EpuvrTXAIqTK-1WIsYoJSrP7XBG0jE6FAoY1P3QfL_c';
 var TOPE_H = 7;
-var LS_KEY='eb_key', LS_YO='eb_yo', LS_DATOS='eb_datos', LS_COLA='eb_cola', LS_DESC='eb_desc', LS_SYNC='eb_sync', LS_DOM='eb_dom';
+var LS_YO='eb_yo', LS_DATOS='eb_datos', LS_COLA='eb_cola', LS_DESC='eb_desc', LS_SYNC='eb_sync', LS_DOM='eb_dom';
 var PG_NEG = ['P0001','23505','23514','23503','42501','22P02','42703'];
 var MOT_RECH = ['Las horas no corresponden','Está repetida','Ese día no se trabajó ahí'];
 var UNIDADES = ['kg','bulto','litro','unidad'];
@@ -233,9 +234,8 @@ function refrescar(){
 }
 
 /* ─── Conexión ─── */
-function conectar(clave){
-  if(!clave)return null;
-  return supabase.createClient(SB_URL,clave,{global:{headers:{'x-app-ver':VERSION}},auth:{persistSession:true,storageKey:'eb_auth',autoRefreshToken:true}});
+function conectar(){
+  return supabase.createClient(SB_URL,SB_KEY,{global:{headers:{'x-app-ver':VERSION}},auth:{persistSession:true,storageKey:'eb_auth',autoRefreshToken:true}});
 }
 
 /* ─── Render ─── */
@@ -244,7 +244,7 @@ function render(){clearTimeout(timerR);timerR=setTimeout(_render,16)}
 function _render(){$app.innerHTML=R()}
 function R(){
   switch(E.pantalla){
-    case 'cargando':return rCargando();case 'setup':return rSetup();case 'instalar':return rInstalar();
+    case 'cargando':return rCargando();case 'instalar':return rInstalar();
     case 'login':return rLogin();case 'socio':return rSocio();case 'admin':return rAdmin();
     case 'revisor':return rRevisor();case 'revisar':return rBandeja();case 'cuenta':return rCuenta();
     default:return'<div class="centro"><p>Error</p></div>';
@@ -273,7 +273,6 @@ function cabAdmin(tit){
 
 /* ─── Pantallas estáticas ─── */
 function rCargando(){return'<div class="centro"><div style="text-align:center"><div style="font-size:32px;font-weight:700">Finca El Bledo</div><div class="sub mt">Cargando v'+VERSION+'…</div></div></div>'}
-function rSetup(){return'<div class="pant"><div class="main" style="display:flex;flex-direction:column;justify-content:center;min-height:100%"><div class="tarj col"><div style="font-size:22px;font-weight:700;text-align:center">Configurar la app</div><p class="sub">Pegue aquí la clave publicable de Supabase. La encuentra en el panel: Project Settings → API Keys → anon (public).</p><input class="inp" data-campo="f_key" placeholder="eyJ… o sb_publishable_…" value="'+esc(E.f.f_key||'')+'">'+avisoH()+'<button class="btn-v" data-a="guardar_key">Guardar</button></div></div></div>'}
 function rInstalar(){return'<div class="pant"><div class="main"><div style="text-align:center;margin-bottom:16px"><div style="font-size:28px;font-weight:700">Finca El Bledo</div><div class="sub" style="margin-top:4px">Primera vez: crear el administrador</div></div><div class="tarj col"><label class="lbl">Código de instalación</label><input class="inp" type="password" data-campo="f_codigo" value="'+esc(E.f.f_codigo||'')+'"><label class="lbl">Su nombre completo</label><input class="inp" data-campo="f_nombre" placeholder="Ej.: Jesús Calle" value="'+esc(E.f.f_nombre||'')+'"><label class="lbl">Usuario para entrar</label><input class="inp" data-campo="f_usuario" placeholder="Ej.: jesuscalle" value="'+esc(E.f.f_usuario||'')+'"><label class="lbl">Clave (mínimo 8 caracteres)</label><input class="inp" type="password" data-campo="f_clave" value="'+esc(E.f.f_clave||'')+'">'+avisoH()+'<button class="btn-v" data-a="instalar">Crear administrador</button></div></div></div>'}
 function rLogin(){return'<div class="pant"><div class="main" style="display:flex;flex-direction:column;justify-content:center;min-height:100%"><div style="text-align:center;margin-bottom:24px"><div style="font-size:32px;font-weight:700">Finca El Bledo</div><div class="sub" style="margin-top:4px">v'+VERSION+'</div></div><div class="tarj col"><label class="lbl">Usuario</label><input class="inp" data-campo="f_user" placeholder="Ej.: jesuscalle" autocomplete="username" value="'+esc(E.f.f_user||'')+'"><label class="lbl">Clave</label><input class="inp" type="password" data-campo="f_pass" autocomplete="current-password" value="'+esc(E.f.f_pass||'')+'">'+avisoH()+'<button class="btn-v" data-a="entrar">Entrar</button></div></div></div>'}
 
@@ -611,7 +610,7 @@ function rBandeja(){
 function rCuenta(){
   return'<div class="pant"><header class="cab"><h1 style="font-size:24px">Mi cuenta</h1><button class="link-btn" data-a="volver" style="margin-top:8px">← Volver</button></header><div class="main"><div class="tarj col"><span style="font-size:18px;font-weight:700">'+esc(yo?yo.nombre:'')+'</span><span class="sub">Rol: '+esc(yo?yo.rol:'')+'</span><span class="sub">Versión: '+VERSION+'</span></div>'+
     (nRev()>0?'<button class="btn-o mt" style="border-color:#8A2A1B;color:#8A2A1B" data-a="ir_revisar">'+nRev()+' registros para revisar</button>':'')+
-    '<button class="btn-o mt" data-a="salir">Cerrar sesión</button><button class="link-btn mt" data-a="cambiar_key">Cambiar clave de Supabase</button></div></div>';
+    '<button class="btn-o mt" data-a="salir">Cerrar sesión</button></div></div>';
 }
 
 /* ─── Eventos ─── */
@@ -619,8 +618,6 @@ $app.addEventListener('input',function(e){if(e.target.dataset.campo)E.f[e.target
 $app.addEventListener('click',function(e){
   var btn=e.target.closest('[data-a]');if(!btn)return;var a=btn.dataset.a,p=btn.dataset.p,p2=btn.dataset.p2;
   switch(a){
-  case'guardar_key':var k=(E.f.f_key||'').trim();if(!k||k.length<20){E.aviso='Pegue la clave completa.';render();return}localStorage.setItem(LS_KEY,k);E.aviso='';arrancar();return;
-  case'cambiar_key':localStorage.removeItem(LS_KEY);E.pantalla='setup';E.aviso='';render();return;
   case'instalar':hInstalar();return;
   case'entrar':hEntrar();return;
   case'ir_tab':E.tab=p;E.aviso='';E.rechazando=null;E.corrigiendo=null;E.gAcc=null;E.movProd=null;E.subAg=null;E.paso='inicio';render();return;
@@ -827,10 +824,8 @@ function hSalir(){if(sb)sb.auth.signOut().catch(function(){});yo=null;localStora
 /* ─── Arranque ─── */
 function arrancar(){
   cargar();render();
-  var clave=localStorage.getItem(LS_KEY);
-  if(!clave){E.pantalla='setup';render();return}
-  sb=conectar(clave);
-  if(!sb){E.pantalla='setup';E.aviso='Clave inválida.';render();return}
+  try{localStorage.removeItem('eb_key')}catch(e){}
+  sb=conectar();
   sb.rpc('estado_instalacion').then(function(r){
     if(r.error){
       if(yo){irApp();flush();return}
