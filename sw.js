@@ -3,13 +3,15 @@
 // nuevo y el anterior se borra al activar. app.html va a la red primero para que
 // ningún celular quede atrapado en una versión vieja.
 
-const APP_VER = '1.0.0';
+const APP_VER = '1.1.0';
 const CACHE = 'elbledo-' + APP_VER;
 const PRECARGA = [
   './',
   './index.html',
   './manifest.json',
-  './supabase.js'
+  './supabase.js',
+  './atkinson-400.woff2',
+  './atkinson-700.woff2'
 ];
 
 self.addEventListener('install', evento => {

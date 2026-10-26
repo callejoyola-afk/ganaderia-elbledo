@@ -12,6 +12,10 @@
 !icono*.png
 !icono*.svg
 
+# Fuentes para uso sin señal:
+!atkinson-400.woff2
+!atkinson-700.woff2
+
 # Nunca subir:
 #   *.md              (documentación de trabajo)
 #   *.sql             (migraciones, no van en el sitio)
