@@ -56,7 +56,7 @@ input,select,textarea{font-family:inherit;font-size:18px}
 <script>
 'use strict';
 
-var VERSION = '1.1.1';
+var VERSION = '1.1.2';
 var SB_URL = 'https://hwvufzeayumqjxjtebvp.supabase.co';
 var TOPE_H = 7;
 var LS_KEY='eb_key', LS_YO='eb_yo', LS_DATOS='eb_datos', LS_COLA='eb_cola', LS_DESC='eb_desc', LS_SYNC='eb_sync', LS_DOM='eb_dom';
@@ -816,7 +816,7 @@ function hAgregarProd(){
 }
 function hInvCant(prodId,cant){
   var tipo=E.movTipo,tipoDb=tipo==='entrada'?'entrada':'salida',motivo=tipo==='entrada'?'compra':'labor';
-  encolar('movimientos_inventario','crear',uuid(),{producto_id:prodId,tipo:tipoDb,motivo:motivo,fecha:fechaBog(),cantidad:cant});
+  encolar('movimientos_inventario','crear',uuid(),{producto_id:prodId,tipo:tipoDb,motivo:motivo,fecha:fechaBog(),cantidad:tipo==='entrada'?cant:-cant});
   var pr=datos.stock.find(function(x){return x.producto_id===prodId});
   if(pr)pr.stock=(pr.stock||0)+(tipo==='entrada'?cant:-cant);
   E.aviso=(tipo==='entrada'?'Entraron ':'Salieron ')+cant+(pr?' '+pr.unidad+' de '+pr.nombre:'')+'.'  ;E.avisoOk=true;
