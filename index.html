@@ -56,7 +56,7 @@ input,select,textarea{font-family:inherit;font-size:18px}
 <script>
 'use strict';
 
-var VERSION = '1.1.3';
+var VERSION = '1.1.4';
 var SB_URL = 'https://hwvufzeayumqjxjtebvp.supabase.co';
 var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh3dnVmemVheXVtcWp4anRlYnZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkwNzYzMTUsImV4cCI6MjEwNDY1MjMxNX0.EpuvrTXAIqTK-1WIsYoJSrP7XBG0jE6FAoY1P3QfL_c';
 var TOPE_H = 7;
@@ -548,7 +548,7 @@ function rSocios(sl){
       '<span style="font-size:18px;font-weight:700">'+pct(c.capital)+'</span></button>';
   });
   h+='</div></div>';
-  if(!sl)h+='<div class="tarj col"><span style="font-size:18px;font-weight:700">Nuevo socio</span><label class="sub">Nombre</label><input class="inp" data-campo="f_pnom" placeholder="Ej.: Carlos Pérez" value="'+esc(E.f.f_pnom||'')+'"><label class="sub">Usuario</label><input class="inp" data-campo="f_pusr" placeholder="Ej.: carlos" value="'+esc(E.f.f_pusr||'')+'"><span class="sub">La clave será <b>'+esc(E.f.f_pclave||genClave())+'</b>. Désela en persona.</span><button class="btn-v" style="height:52px" data-a="crear_socio">Crear socio</button></div>';
+  if(!sl){if(!E.f.f_pclave)E.f.f_pclave=genClave();h+='<div class="tarj col"><span style="font-size:18px;font-weight:700">Nuevo socio</span><label class="sub">Nombre</label><input class="inp" data-campo="f_pnom" placeholder="Ej.: Carlos Pérez" value="'+esc(E.f.f_pnom||'')+'"><label class="sub">Usuario</label><input class="inp" data-campo="f_pusr" placeholder="Ej.: carlos" value="'+esc(E.f.f_pusr||'')+'"><span class="sub">La clave será <b>'+esc(E.f.f_pclave)+'</b>. Désela en persona.</span><button class="btn-v" style="height:52px" data-a="crear_socio">Crear socio</button></div>';}
   h+='<div style="background:#EAE4D3;border-radius:16px;padding:12px 14px;font-size:15px"><b>Socio:</b> registra labores, ve su inversión.<br><b>Revisor:</b> ve todo lo del admin, no aprueba ni cambia.<br><b>Administrador:</b> ve todo, aprueba y maneja socios.</div>';
   var ROLES=[['socio','Socio'],['revisor','Revisor'],['admin','Admin']],ROL_N={socio:'Socio',revisor:'Revisor',admin:'Administrador'};
   pers.forEach(function(p){
@@ -765,7 +765,7 @@ function hGCrear(){
 function hCrearSocio(){
   var n=(E.f.f_pnom||'').trim(),u=(E.f.f_pusr||'').trim().toLowerCase();
   if(!n||u.length<3){E.aviso='Nombre y usuario (3+ letras).';render();return}
-  var clave=E.f.f_pclave||genClave();E.aviso='Creando…';render();
+  var clave=E.f.f_pclave;E.aviso='Creando…';render();
   sb.functions.invoke('usuarios',{body:{accion:'crear',nombre:n,usuario:u,clave:clave,rol:'socio'}}).then(function(r){
     if(r.error||(r.data&&r.data.error)){E.aviso=(r.data&&r.data.error)||r.error.message||'Error.';render();return}
     E.f.f_pnom='';E.f.f_pusr='';E.f.f_pclave='';E.aviso=n+' creado. Clave: '+clave;E.avisoOk=true;refrescar();

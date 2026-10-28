@@ -3,7 +3,7 @@
 // nuevo y el anterior se borra al activar. app.html va a la red primero para que
 // ningún celular quede atrapado en una versión vieja.
 
-const APP_VER = '1.1.3';
+const APP_VER = '1.1.4';
 const CACHE = 'elbledo-' + APP_VER;
 const PRECARGA = [
   './',
