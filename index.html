@@ -56,13 +56,14 @@ input,select,textarea{font-family:inherit;font-size:18px}
 <script>
 'use strict';
 
-var VERSION = '1.1.4';
+var VERSION = '1.2.0';
 var SB_URL = 'https://hwvufzeayumqjxjtebvp.supabase.co';
 var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh3dnVmemVheXVtcWp4anRlYnZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkwNzYzMTUsImV4cCI6MjEwNDY1MjMxNX0.EpuvrTXAIqTK-1WIsYoJSrP7XBG0jE6FAoY1P3QfL_c';
 var TOPE_H = 7;
 var LS_YO='eb_yo', LS_DATOS='eb_datos', LS_COLA='eb_cola', LS_DESC='eb_desc', LS_SYNC='eb_sync', LS_DOM='eb_dom';
 var PG_NEG = ['P0001','23505','23514','23503','42501','22P02','42703'];
 var MOT_RECH = ['Las horas no corresponden','Está repetida','Ese día no se trabajó ahí'];
+var MOT_NO_ENTRO = ['El dinero no llegó','El valor no es ese','Está repetido'];
 var UNIDADES = ['kg','bulto','litro','unidad'];
 var SERIES = ['#2a78d6','#eb6834','#1baf7a','#eda100','#e87ba4'];
 var OTROS_C = '#B9B2A0';
@@ -88,10 +89,10 @@ var TAB_D = {
 /* ─── Estado ─── */
 var sb = null;
 var yo = null, dominio = '';
-var datos = {actividades:[],potreros:[],labores:[],personas:[],ganadoLotes:[],ganadoHist:{},capitalPersona:[],stock:[],config:{},jornales:[],alertas:[]};
+var datos = {actividades:[],potreros:[],labores:[],personas:[],ganadoLotes:[],ganadoHist:{},capitalPersona:[],stock:[],config:{},jornales:[],alertas:[],aportes:[]};
 var cola = [], descarte = [];
 var ultimoSync = {};
-var E = {pantalla:'cargando',tab:'hoy',subAg:null,paso:'inicio',selAct:null,selPot:null,rechazando:null,corrigiendo:null,desactivando:null,gAcc:null,gLote:null,gVer:null,gNuevo:false,movProd:null,movTipo:null,selSocio:null,f:{},aviso:'',avisoOk:false};
+var E = {pantalla:'cargando',tab:'hoy',subAg:null,paso:'inicio',pasoT:'socio',pasoA:'socio',selAct:null,selPot:null,rechazando:null,corrigiendo:null,desactivando:null,gAcc:null,gLote:null,gVer:null,gNuevo:false,movProd:null,movTipo:null,selSocio:null,editandoNota:null,verAporteGrupo:null,rechAporte:null,dandoAcceso:null,f:{},aviso:'',avisoOk:false};
 var flushing = false, timerR = 0;
 
 /* ─── Utilidades ─── */
@@ -116,6 +117,42 @@ function nomAct(id){var a=datos.actividades.find(function(x){return x.id===id});
 function nomPot(id){if(!id)return'General';var p=datos.potreros.find(function(x){return x.id===id});return p?p.nombre:'Potrero'}
 function nomPers(id){var p=datos.personas.find(function(x){return x.id===id});return p?p.nombre:'Socio'}
 
+/* ─── Helpers ─── */
+function verificadoresDe(ap){return datos.personas.filter(function(p){return p.rol==='admin'&&p.activo!==false&&!p.deleted_at&&p.id!==ap.persona_id&&p.id!==ap.registrado_por})}
+function puedeVerificar(ap){if(!yo||yo.rol!=='admin')return false;return yo.persona_id!==ap.persona_id&&yo.persona_id!==ap.registrado_por}
+function sugerirUsuario(nombre){return nombre.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/\s+/g,'').replace(/[^a-z0-9]/g,'')}
+function solapaLabores(pid,desde,hasta){return datos.labores.filter(function(l){return l.persona_id===pid&&!l.deleted_at&&l.estado!=='rechazada'&&l.fecha<=hasta&&(l.fecha_hasta||l.fecha)>=desde})}
+function formaTexto(f,desc){if(f==='cuenta')return'Transferencia bancaria';if(f==='efectivo')return'Efectivo';if(f==='directo')return desc?'Pago directo: '+desc:'Pago directo';if(f==='caja')return'Aporte a la caja común'+(desc?' ('+desc+')':'');return f||''}
+
+/* ─── Payloads (funciones puras) ─── */
+function payloadEmpezar(persona_id,fecha,actividad_id,inicio,potrero_id){
+  return{persona_id:persona_id,fecha:fecha,actividad_id:actividad_id,inicio:inicio,potrero_id:potrero_id||null,modalidad:'participacion',reparto:[]};
+}
+function payloadTerminar(fin){return{fin:fin}}
+function payloadAprobar(){return{estado:'aprobada'}}
+function payloadRechazar(motivo){return{estado:'rechazada',motivo_rechazo:motivo}}
+function payloadCorregirHorario(inicio,fin){return{inicio:inicio,fin:fin}}
+function payloadNota(obs){return{obs:obs}}
+function payloadLaborTardia(persona_id,fecha,fecha_hasta,horas_declaradas,jornales,actividad_id,potrero_id,obs,registrado_por){
+  var p={persona_id:persona_id,fecha:fecha,horas_declaradas:horas_declaradas,jornales:jornales,actividad_id:actividad_id,potrero_id:potrero_id||null,modalidad:'participacion',reparto:[],tardio:true,registrado_por:registrado_por};
+  if(fecha_hasta)p.fecha_hasta=fecha_hasta;if(obs)p.obs=obs;return p;
+}
+function payloadAporte(persona_id,fecha,valor,forma,recibido_por,descripcion,soporte_url,registrado_por){
+  var p={persona_id:persona_id,fecha:fecha,tipo:'dinero',valor:valor,forma:forma,registrado_por:registrado_por};
+  if(recibido_por)p.recibido_por=recibido_por;if(descripcion)p.descripcion=descripcion;if(soporte_url)p.soporte_url=soporte_url;return p;
+}
+function payloadVerificarAporte(){return{estado:'verificado'}}
+function payloadNoEntro(motivo){return{estado:'no_entro',motivo_rechazo:motivo}}
+function payloadEntradaGanado(lote_id,fecha,cabezas,kg_total,precio_kg){return{lote_id:lote_id,fecha:fecha,cabezas:cabezas,kg_total:kg_total,precio_kg:precio_kg}}
+function payloadPesaje(lote_id,fecha,n_animales,peso_promedio_kg){return{lote_id:lote_id,fecha:fecha,n_animales:n_animales,peso_promedio_kg:peso_promedio_kg}}
+function payloadVenta(lote_id,fecha,cabezas,peso_total_kg,precio_kg){return{lote_id:lote_id,fecha:fecha,cabezas:cabezas,peso_total_kg:peso_total_kg,precio_kg:precio_kg}}
+function payloadBaja(lote_id,fecha,cabezas,causa){return{lote_id:lote_id,fecha:fecha,cabezas:cabezas,causa:causa}}
+function payloadCrearActividad(valor,orden,activo){return{tipo:'actividad',valor:valor,orden:orden,activo:activo,extra:{}}}
+function payloadCrearPotrero(codigo,nombre,area_ha){return{codigo:codigo,nombre:nombre,area_ha:area_ha}}
+function payloadCrearProducto(nombre,unidad){return{nombre:nombre,unidad:unidad}}
+function payloadMovInventario(producto_id,tipo,motivo,fecha,cantidad){return{producto_id:producto_id,tipo:tipo,motivo:motivo,fecha:fecha,cantidad:cantidad}}
+function payloadDarAcceso(persona_id,usuario,clave){return{accion:'dar_acceso',persona_id:persona_id,usuario:usuario,clave:clave}}
+
 /* ─── Almacenamiento local ─── */
 function guardar(){try{localStorage.setItem(LS_COLA,JSON.stringify(cola));localStorage.setItem(LS_DESC,JSON.stringify(descarte));localStorage.setItem(LS_DATOS,JSON.stringify(datos));localStorage.setItem(LS_SYNC,JSON.stringify(ultimoSync));if(yo)localStorage.setItem(LS_YO,JSON.stringify(yo))}catch(e){}}
 function cargar(){try{var c=localStorage.getItem(LS_COLA);if(c)cola=JSON.parse(c);var d=localStorage.getItem(LS_DESC);if(d)descarte=JSON.parse(d);var dt=localStorage.getItem(LS_DATOS);if(dt)Object.assign(datos,JSON.parse(dt));var s=localStorage.getItem(LS_SYNC);if(s)ultimoSync=JSON.parse(s);var y=localStorage.getItem(LS_YO);if(y)yo=JSON.parse(y);dominio=localStorage.getItem(LS_DOM)||''}catch(e){}}
@@ -132,6 +169,10 @@ function aplicarLocal(tabla,op,id,payload){
   if(tabla==='labores'){
     if(op==='crear'){datos.labores.push(Object.assign({id:id},payload,{estado:'pendiente',alertas:[]}))}
     else if(op==='editar'){var i=datos.labores.findIndex(function(l){return l.id===id});if(i>=0)Object.assign(datos.labores[i],payload)}
+  }
+  if(tabla==='aportes'){
+    if(op==='crear'){datos.aportes.push(Object.assign({id:id},payload,{estado:'pendiente',nombre:nomPers(payload.persona_id),registrado_por_nombre:nomPers(payload.registrado_por)}))}
+    else if(op==='editar'){var j=datos.aportes.findIndex(function(a){return a.id===id});if(j>=0)Object.assign(datos.aportes[j],payload)}
   }
 }
 function clasificar(res){
@@ -218,6 +259,9 @@ function refrescar(){
     prom.push(sb.from('v_capital_persona').select('*').then(function(r){if(!r.error&&r.data)datos.capitalPersona=r.data}).catch(function(){}));
     prom.push(sb.from('v_stock').select('*').then(function(r){if(!r.error&&r.data)datos.stock=r.data}).catch(function(){}));
   }
+  var qAp=sb.from('v_aportes').select('*');
+  if(yo.rol==='socio')qAp=qAp.eq('persona_id',yo.persona_id);
+  prom.push(qAp.order('fecha',{ascending:false}).limit(200).then(function(r){if(!r.error&&r.data)datos.aportes=r.data}).catch(function(){}));
   var hoy=fechaBog();
   var qL=sb.from('labores').select('*');
   if(yo.rol==='socio')qL=qL.eq('persona_id',yo.persona_id);
@@ -295,7 +339,13 @@ function rSocioHoy(){
     return h+'<div class="col"><div style="background:#FFF;border:3px solid #1E6B3A;border-radius:24px;padding:20px" class="col">'+
       '<span class="chip chip-ok" style="align-self:flex-start">EN CURSO</span>'+
       '<div class="fila">'+ico(icoAct(na),44,'#1E6B3A')+'<span style="display:flex;flex-direction:column;gap:2px"><span style="font-size:24px;font-weight:700;line-height:1.15">'+esc(na)+'</span><span style="font-size:17px;color:#5B6B5F">'+esc(np)+'</span></span></div>'+
-      '<div style="border-top:1px solid #D9D3C3;padding-top:10px;display:flex;justify-content:space-between;font-size:17px"><span>Empezó a las <b>'+horaC(ab.inicio)+'</b></span><span>Lleva <b>'+durM(mt)+'</b></span></div></div>'+
+      '<div style="border-top:1px solid #D9D3C3;padding-top:10px;display:flex;justify-content:space-between;font-size:17px"><span>Empezó a las <b>'+horaC(ab.inicio)+'</b></span><span>Lleva <b>'+durM(mt)+'</b></span></div>'+
+      (E.editandoNota===ab.id?
+        '<div class="col" style="gap:6px;border-top:1px solid #D9D3C3;padding-top:10px"><textarea class="inp" data-campo="f_nota" rows="2" style="height:auto;padding:10px 14px" placeholder="Escriba una nota…">'+esc(E.f.f_nota||ab.obs||'')+'</textarea>'+
+        '<div class="g2"><button class="btn-o" style="height:44px" data-a="cancel_nota">Cancelar</button><button class="btn-v" style="height:44px" data-a="guardar_nota" data-p="'+ab.id+'">Guardar nota</button></div></div>':
+        (ab.obs?'<div style="border-top:1px solid #D9D3C3;padding-top:10px"><span class="sub">Nota: '+esc(ab.obs)+'</span><br><button class="link-btn" data-a="editar_nota" data-p="'+ab.id+'">Cambiar la nota</button></div>':
+        '<button class="link-btn" style="border-top:1px solid #D9D3C3;padding-top:10px" data-a="editar_nota" data-p="'+ab.id+'">Agregar una nota</button>'))+
+      '</div>'+
       '<button type="button" data-a="terminar" style="width:100%;height:200px;border:0;border-radius:28px;background:#E8A33D;color:#1B2A1F;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px">'+
       ico('M6 6h12v12H6z',56)+'<span style="font-size:40px;font-weight:700;letter-spacing:.02em">TERMINAR</span><span style="font-size:16px">Toque al acabar esta labor</span></button></div>';
   }
@@ -352,17 +402,33 @@ function rSocioHoy(){
 function rSocioInv(){
   var cp=yo?datos.capitalPersona.find(function(x){return x.persona_id===yo.persona_id}):null;
   var apr=cp?(cp.capital||0):0;
-  var labsPend=datos.labores.filter(function(l){return yo&&l.persona_id===yo.persona_id&&l.estado==='pendiente'&&l.fin&&!l.deleted_at});
-  var hPend=labsPend.reduce(function(t,l){return t+minEntre(l.inicio,l.fin)},0);
+  var valTrabajo=cp?(cp.valor_trabajo||0):0;
+  var valDinero=cp?(cp.dinero||0):0;
+  var labsPend=datos.labores.filter(function(l){return yo&&l.persona_id===yo.persona_id&&l.estado==='pendiente'&&(l.fin||l.tardio)&&!l.deleted_at});
+  var hPend=labsPend.reduce(function(t,l){return l.tardio?t+(l.horas_declaradas||0)*60:t+minEntre(l.inicio,l.fin)},0);
   var labs=datos.labores.filter(function(l){return yo&&l.persona_id===yo.persona_id&&!l.deleted_at}).sort(function(a,b){return b.fecha>a.fecha?1:-1}).slice(0,20);
+  var misAportes=datos.aportes.filter(function(a){return yo&&a.persona_id===yo.persona_id}).sort(function(a,b){return b.fecha>a.fecha?1:-1});
   var h='<div class="col" style="gap:14px"><div style="background:#1E6B3A;color:#FFF;border-radius:24px;padding:22px 20px"><span style="font-size:16px">Mi inversión aprobada</span><div style="font-size:40px;font-weight:700">'+pesos(apr)+'</div></div>';
+  h+='<div class="g2"><div style="background:#FFF;border:1px solid #D9D3C3;border-radius:20px;padding:16px"><span class="sub">Trabajo</span><div style="font-size:24px;font-weight:700">'+pesos(valTrabajo)+'</div></div>'+
+    '<div style="background:#FFF;border:1px solid #D9D3C3;border-radius:20px;padding:16px"><span class="sub">Dinero</span><div style="font-size:24px;font-weight:700">'+pesos(valDinero)+'</div></div></div>';
   if(hPend>0)h+='<div style="background:#FBEBD0;border-radius:20px;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;gap:12px"><span><span style="font-size:16px;color:#6B4A10">Por aprobar</span><br><span style="font-size:14px;color:#6B4A10">'+labsPend.length+' labor(es) pendiente(s)</span></span><span style="font-size:24px;font-weight:700;color:#4A3209">'+durM(hPend)+'</span></div>';
+  if(misAportes.length){
+    h+='<h2 style="margin:8px 0 0;font-size:20px">Mis aportes en dinero</h2>';
+    misAportes.forEach(function(a){
+      var est=a.estado||'pendiente',cls=est==='verificado'?'chip-ok':(est==='no_entro'?'chip-no':'chip-pend'),txt=est==='verificado'?'Verificado':(est==='no_entro'?'No entró':'Por verificar');
+      h+='<div class="tarj" style="padding:14px 16px"><div class="entre"><span style="font-size:17px;font-weight:700">'+pesos(a.valor)+'</span><span class="chip '+cls+'">'+esc(txt)+'</span></div>'+
+        '<div class="sub">'+esc(fechaTxt(a.fecha))+' · '+esc(formaTexto(a.forma,a.descripcion))+'</div>';
+      if(a.motivo_rechazo)h+='<div style="font-size:15px;color:#8A2A1B;margin-top:4px">Motivo: '+esc(a.motivo_rechazo)+'</div>';
+      h+='</div>';
+    });
+  }
   if(labs.length){
     h+='<h2 style="margin:8px 0 0;font-size:20px">Mis últimas labores</h2>';
     labs.forEach(function(l){
       var est=l.estado||'pendiente',cls=est==='aprobada'?'chip-ok':(est==='rechazada'?'chip-no':'chip-pend'),txt=est==='aprobada'?'Aprobada':(est==='rechazada'?'Rechazada':'Por aprobar');
-      var det=(l.inicio&&l.fin?durM(minEntre(l.inicio,l.fin))+' · ':'')+nomAct(l.actividad_id)+' · '+nomPot(l.potrero_id);
+      var det=l.tardio?((l.horas_declaradas||0)+' h · '):(l.inicio&&l.fin?durM(minEntre(l.inicio,l.fin))+' · ':'')+nomAct(l.actividad_id)+' · '+nomPot(l.potrero_id);
       h+='<div class="tarj" style="padding:14px 16px"><div class="entre"><span style="font-size:17px;font-weight:700">'+esc(fechaTxt(l.fecha))+'</span><span class="chip '+cls+'">'+esc(txt)+'</span></div><div class="sub">'+esc(det)+'</div>';
+      if(l.tardio)h+='<span class="chip chip-pend" style="font-size:12px">Tardío</span>';
       if(l.motivo_rechazo)h+='<div style="font-size:15px;color:#8A2A1B;margin-top:4px">Motivo: '+esc(l.motivo_rechazo)+'</div>';
       h+='</div>';
     });
@@ -372,10 +438,10 @@ function rSocioInv(){
 
 /* ─── Admin ─── */
 function rAdmin(){
-  var tits={aprobar:'Jornadas por aprobar',agregar:'Agregar',ganado:'Lotes de ganado',socios:'Socios',bodega:'Bodega (inventario)'};
-  var t=E.tab,tit=tits[t]||'';if(t==='agregar'&&E.subAg==='labor')tit='Actividades';if(t==='agregar'&&E.subAg==='lote')tit='Lotes';
+  var tits={aprobar:'Por aprobar',agregar:'Agregar',ganado:'Lotes de ganado',socios:'Socios',bodega:'Bodega (inventario)'};
+  var t=E.tab,tit=tits[t]||'';if(t==='agregar'&&E.subAg==='labor')tit='Actividades';if(t==='agregar'&&E.subAg==='lote')tit='Lotes';if(t==='agregar'&&E.subAg==='trabajo')tit='Trabajo de un socio';if(t==='agregar'&&E.subAg==='aporte')tit='Aporte de dinero';
   var c='';switch(t){case'aprobar':c=rAprobar(false);break;case'agregar':c=rAgregar(false);break;case'ganado':c=rGanado(false);break;case'socios':c=rSocios(false);break;case'bodega':c=rBodega(false);break}
-  var pN=datos.labores.filter(function(l){return l.estado==='pendiente'&&l.fin&&!l.deleted_at}).length;
+  var pN=datos.labores.filter(function(l){return l.estado==='pendiente'&&(l.fin||l.tardio)&&!l.deleted_at}).length+datos.aportes.filter(function(a){return a.estado==='pendiente'}).length;
   var tabs=['aprobar','agregar','ganado','socios','bodega'],labels=['Aprobar','Agregar','Ganado','Socios','Bodega'];
   return'<div class="pant">'+cabAdmin(tit)+'<div class="main">'+avisoH()+c+'</div>'+
     '<nav class="nav" style="grid-template-columns:repeat(5,1fr)">'+tabs.map(function(tb,i){
@@ -397,16 +463,76 @@ function rRevisor(){
 
 /* ─── Aprobar ─── */
 function rAprobar(sl){
-  var pend=datos.labores.filter(function(l){return l.estado==='pendiente'&&l.fin&&!l.deleted_at}).sort(function(a,b){return a.fecha>b.fecha?-1:1});
   var h='<div class="col" style="gap:14px">';
+  h+=rAprobarAportes(sl);
+  h+=rAprobarLabores(sl);
+  h+='</div>';return h;
+}
+function rAprobarAportes(sl){
+  var pendA=datos.aportes.filter(function(a){return a.estado==='pendiente'});
+  if(!pendA.length)return'';
+  var grupos={};pendA.forEach(function(a){var k=a.persona_id;if(!grupos[k])grupos[k]={pid:k,nombre:a.nombre||nomPers(k),items:[]};grupos[k].items.push(a)});
+  var gArr=Object.keys(grupos).map(function(k){return grupos[k]}).sort(function(a,b){return(a.nombre||'').localeCompare(b.nombre||'')});
+  var h='<h2 style="font-size:20px">Aportes por verificar</h2>';
+  gArr.forEach(function(g){
+    var total=g.items.reduce(function(t,a){return t+(a.valor||0)},0);
+    var abierto=E.verAporteGrupo===g.pid;
+    var verf=g.items.filter(function(a){return puedeVerificar(a)});
+    var bloq=g.items.filter(function(a){return!puedeVerificar(a)});
+    h+='<div class="tarj col"><div class="entre"><span style="font-size:18px;font-weight:700">'+esc(g.nombre)+'</span><span style="font-size:18px;font-weight:700">'+pesos(total)+'</span></div>'+
+      '<span class="sub">'+g.items.length+' aporte(s) por verificar</span>';
+    if(!sl&&verf.length>1)h+='<button class="btn-v" style="height:48px" data-a="verificar_todos" data-p="'+g.pid+'">Verificar los '+verf.length+'</button>';
+    if(g.items.length)h+='<button class="link-btn" data-a="ver_aportes" data-p="'+g.pid+'">'+(abierto?'Ocultar':'Ver uno por uno')+'</button>';
+    if(abierto){
+      g.items.forEach(function(a){
+        var puede=puedeVerificar(a);
+        var vfs=verificadoresDe(a);
+        h+='<div style="background:#F4F1E8;border-radius:14px;padding:12px" class="col">'+
+          '<div class="entre"><span style="font-size:16px;font-weight:700">'+pesos(a.valor)+'</span><span class="sub">'+esc(fechaTxt(a.fecha))+'</span></div>'+
+          '<span class="sub">'+esc(formaTexto(a.forma,a.descripcion))+'</span>';
+        if(a.registrado_por_nombre)h+='<span class="sub">Registrado por '+esc(a.registrado_por_nombre)+'</span>';
+        if(!sl){
+          if(!puede&&vfs.length===0){h+='<span style="font-size:14px;color:#6B4A10;background:#FBEBD0;border-radius:10px;padding:6px 10px">Falta otro administrador para verificarlo</span>'}
+          else if(!puede){h+='<span class="sub">Otro administrador debe verificarlo</span>'}
+          else if(E.rechAporte===a.id){
+            h+='<div class="col" style="gap:6px"><span style="font-size:15px;font-weight:700">¿Por qué no entró?</span>';
+            MOT_NO_ENTRO.forEach(function(m){h+='<button data-a="no_entro" data-p="'+a.id+'" data-p2="'+esc(m)+'" style="min-height:48px;border-radius:12px;border:1px solid #D9D3C3;background:#FFF;font-size:16px;text-align:left;padding:8px 12px;color:#1B2A1F">'+esc(m)+'</button>'});
+            h+='<button style="height:40px;border:0;background:transparent;font-size:14px;color:#5B6B5F;text-decoration:underline" data-a="cancel_rech_ap">Cancelar</button></div>';
+          } else {
+            h+='<div class="g2"><button data-a="ini_rech_ap" data-p="'+a.id+'" style="min-height:48px;border-radius:14px;border:2px solid #8A2A1B;background:transparent;color:#8A2A1B;font-size:16px;font-weight:700">No entró</button>'+
+              '<button data-a="si_entro" data-p="'+a.id+'" style="min-height:48px;border-radius:14px;border:0;background:#1E6B3A;color:#FFF;font-size:16px;font-weight:700">Sí entró</button></div>';
+          }
+        }
+        h+='</div>';
+      });
+      bloq.forEach(function(a){
+        var vfs=verificadoresDe(a);
+        if(vfs.length===0){}
+      });
+    }
+    h+='</div>';
+  });
+  return h;
+}
+function rAprobarLabores(sl){
+  var pend=datos.labores.filter(function(l){return l.estado==='pendiente'&&(l.fin||l.tardio)&&!l.deleted_at}).sort(function(a,b){return a.fecha>b.fecha?-1:1});
+  var h='';
+  if(pend.length)h+='<h2 style="font-size:20px;margin-top:8px">Jornadas por aprobar</h2>';
   if(pend.length&&!sl)h+='<button class="btn-v" style="border:2px solid #1E6B3A;background:transparent;color:#1E6B3A" data-a="aprobar_todas">Aprobar las '+pend.length+' jornadas</button>';
-  if(!pend.length)h+='<div class="tarj" style="padding:24px 20px;text-align:center">'+ico('M20 6 9 17l-5-5',48,'#1E6B3A')+'<div style="font-size:20px;font-weight:700;margin-top:8px">No hay jornadas por aprobar</div></div>';
+  if(!pend.length&&!datos.aportes.filter(function(a){return a.estado==='pendiente'}).length)h+='<div class="tarj" style="padding:24px 20px;text-align:center">'+ico('M20 6 9 17l-5-5',48,'#1E6B3A')+'<div style="font-size:20px;font-weight:700;margin-top:8px">No hay nada por aprobar</div></div>';
   pend.forEach(function(l){
-    var nm=nomPers(l.persona_id),mt=minEntre(l.inicio,l.fin),hrs=mt/60,top=hrs>TOPE_H;
-    h+='<div class="tarj col"><div class="entre"><span style="font-size:20px;font-weight:700">'+esc(nm)+'</span><span class="sub">'+esc(fechaTxt(l.fecha))+'</span></div>'+
-      '<span style="font-size:17px">'+horaC(l.inicio)+' – '+horaC(l.fin)+' · '+durM(mt)+'</span>'+
+    var nm=nomPers(l.persona_id);
+    var esTardio=l.tardio;
+    var mt=esTardio?0:minEntre(l.inicio,l.fin),hrs=esTardio?(l.horas_declaradas||0):(mt/60),top=hrs>TOPE_H;
+    var detTiempo=esTardio?(l.horas_declaradas||0)+' h declaradas':(horaC(l.inicio)+' – '+horaC(l.fin)+' · '+durM(mt));
+    var detFecha=l.fecha_hasta?fechaTxt(l.fecha)+' – '+fechaTxt(l.fecha_hasta):fechaTxt(l.fecha);
+    h+='<div class="tarj col"><div class="entre"><span style="font-size:20px;font-weight:700">'+esc(nm)+'</span><span class="sub">'+esc(detFecha)+'</span></div>';
+    if(esTardio)h+='<span class="chip chip-pend" style="align-self:flex-start">Registro tardío</span>';
+    if(l.registrado_por&&l.registrado_por!==l.persona_id)h+='<span class="sub">Cargado por '+esc(nomPers(l.registrado_por))+'</span>';
+    h+='<span style="font-size:17px">'+esc(detTiempo)+'</span>'+
       '<span class="sub">'+esc(nomAct(l.actividad_id))+' · '+esc(nomPot(l.potrero_id))+'</span>';
-    if(top)h+='<div style="background:#FBEBD0;border-radius:12px;padding:10px 12px;font-size:15px;color:#4A3209">Trabajó '+durM(mt)+'. Se le reconocen 7 horas, el máximo de un día.</div>';
+    if(l.obs)h+='<div style="background:#F4F1E8;border-radius:12px;padding:10px 12px;font-size:15px;color:#5B6B5F">Nota del socio: '+esc(l.obs)+'</div>';
+    if(top)h+='<div style="background:#FBEBD0;border-radius:12px;padding:10px 12px;font-size:15px;color:#4A3209">'+(esTardio?'Declaró':'Trabajó')+' '+hrs+' h. Se le reconocen 7 horas, el máximo de un día.</div>';
     if(!sl){
       if(E.rechazando===l.id){
         h+='<div class="col" style="gap:8px"><span style="font-size:16px;font-weight:700">¿Por qué la rechaza?</span>';
@@ -418,22 +544,25 @@ function rAprobar(sl){
           '<label class="sub">Fin</label><input class="inp" type="datetime-local" data-campo="f_cor_fin" value="'+esc(E.f.f_cor_fin||'')+'">'+
           '<div class="g2"><button class="btn-o" style="height:48px" data-a="cancel_cor">Cancelar</button><button class="btn-v" style="height:48px" data-a="guardar_cor" data-p="'+l.id+'">Guardar</button></div></div>';
       } else {
-        h+='<div class="g2"><button class="btn-r" data-a="ini_rech" data-p="'+l.id+'">Rechazar</button><button class="btn-v" data-a="aprobar_lab" data-p="'+l.id+'">Aprobar</button></div>'+
-          '<button class="link-btn" data-a="ini_cor" data-p="'+l.id+'">Corregir horario</button>';
+        h+='<div class="g2"><button class="btn-r" data-a="ini_rech" data-p="'+l.id+'">Rechazar</button><button class="btn-v" data-a="aprobar_lab" data-p="'+l.id+'">Aprobar</button></div>';
+        if(!esTardio)h+='<button class="link-btn" data-a="ini_cor" data-p="'+l.id+'">Corregir horario</button>';
       }
     }
     h+='</div>';
   });
-  h+='</div>';return h;
+  return h;
 }
 
 /* ─── Agregar ─── */
 function rAgregar(sl){
   var sub=E.subAg,h='';
   if(!sub){
+    var opBtn='min-height:110px;border-radius:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#1B2A1F;background:#FFF;border:1px solid #D9D3C3';
     return'<div class="col" style="gap:10px"><span style="font-size:17px;font-weight:700">¿Qué quiere agregar?</span><div class="g2" style="gap:12px">'+
-      '<button data-a="sub_ag" data-p="labor" style="min-height:110px;border-radius:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#1B2A1F;background:#FFF;border:1px solid #D9D3C3">'+ico('M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01',36)+'<span style="font-size:19px;font-weight:700">Una labor</span></button>'+
-      '<button data-a="sub_ag" data-p="lote" style="min-height:110px;border-radius:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#1B2A1F;background:#FFF;border:1px solid #D9D3C3">'+ico('M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14',36)+'<span style="font-size:19px;font-weight:700">Un lote</span></button></div></div>';
+      '<button data-a="sub_ag" data-p="labor" style="'+opBtn+'">'+ico('M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01',36)+'<span style="font-size:19px;font-weight:700">Una labor</span></button>'+
+      '<button data-a="sub_ag" data-p="lote" style="'+opBtn+'">'+ico('M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14',36)+'<span style="font-size:19px;font-weight:700">Un lote</span></button>'+
+      (sl?'':'<button data-a="sub_ag" data-p="trabajo" style="'+opBtn+'">'+ico('M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8',36)+'<span style="font-size:17px;font-weight:700">Trabajo de un socio</span></button>'+
+      '<button data-a="sub_ag" data-p="aporte" style="'+opBtn+'">'+ico('M3 3v18h18M7 15l4-4 3 3 5-6',36)+'<span style="font-size:17px;font-weight:700">Un aporte de dinero</span></button>')+'</div></div>';
   }
   if(sub==='labor'){
     var acts=datos.actividades.sort(function(a,b){return(a.orden||0)-(b.orden||0)});
@@ -455,6 +584,77 @@ function rAgregar(sl){
       h+='<div class="tarj" style="padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:10px"><span style="font-size:18px;font-weight:700">'+esc(p.nombre)+'</span><span class="sub">'+(p.area_ha?p.area_ha+' ha':'Área sin medir')+'</span></div>';
     });
     h+='</div>';return h;
+  }
+  if(sub==='trabajo')return rAgregarTrabajo();
+  if(sub==='aporte')return rAgregarAporte();
+  return'';
+}
+function rAgregarTrabajo(){
+  var pers=datos.personas.filter(function(p){return p.activo!==false&&!p.deleted_at&&p.aporta_trabajo}),paso=E.pasoT;
+  if(paso==='socio'){
+    var h='<div class="col" style="gap:14px"><span class="sub">Paso 1 de 2</span><h2 style="font-size:22px">¿De qué socio?</h2><div class="g2" style="gap:10px">';
+    pers.forEach(function(p){
+      h+='<button data-a="t_socio" data-p="'+p.id+'" style="min-height:64px;border-radius:16px;font-size:17px;font-weight:700;color:#1B2A1F;background:#FFF;border:1px solid #D9D3C3">'+esc(p.nombre)+'</button>';
+    });
+    h+='</div><button class="btn-o" data-a="sub_ag" data-p="">Cancelar</button></div>';return h;
+  }
+  if(paso==='form'){
+    var nm=nomPers(E.f.f_tsocio);
+    var dias=E.f.f_tdias||'uno',jorn=parseInt(E.f.f_tjorn||'0',10),horas=parseInt(E.f.f_thoras||'0',10);
+    var totalH=jorn*7+horas;
+    var acts=datos.actividades.filter(function(a){return a.activo!==false});
+    var pots=datos.potreros.filter(function(p){return p.activo!==false});
+    var desde=E.f.f_tfecha||fechaBog(),hasta=dias==='varios'&&E.f.f_thasta?E.f.f_thasta:desde;
+    var sol=solapaLabores(E.f.f_tsocio,desde,hasta);
+    var h='<div class="col" style="gap:14px"><span class="sub">Paso 2 de 2 · '+esc(nm)+'</span><h2 style="font-size:22px">Detalles del trabajo</h2>';
+    h+='<div class="tarj col"><label class="lbl">¿Cuántos días?</label><div class="g2">'+
+      '<button data-a="t_dias" data-p="uno" style="height:52px;border-radius:14px;font-size:17px;font-weight:700;color:#1B2A1F;'+(dias==='uno'?'background:#DDEEDF;border:3px solid #1E6B3A':'background:#FFF;border:1px solid #B9B2A0')+'">Un día</button>'+
+      '<button data-a="t_dias" data-p="varios" style="height:52px;border-radius:14px;font-size:17px;font-weight:700;color:#1B2A1F;'+(dias==='varios'?'background:#DDEEDF;border:3px solid #1E6B3A':'background:#FFF;border:1px solid #B9B2A0')+'">Varios días</button></div>';
+    h+='<label class="lbl">'+(dias==='varios'?'Desde':'Fecha')+'</label><input class="inp" type="date" data-campo="f_tfecha" value="'+esc(E.f.f_tfecha||fechaBog())+'">';
+    if(dias==='varios')h+='<label class="lbl">Hasta</label><input class="inp" type="date" data-campo="f_thasta" value="'+esc(E.f.f_thasta||'')+'">';
+    h+='<label class="lbl">Jornales</label><div class="fila" style="gap:16px"><button data-a="t_jorn" data-p="-1" style="width:52px;height:52px;border-radius:14px;border:1px solid #B9B2A0;background:#F4F1E8;font-size:24px;font-weight:700;color:#1B2A1F">−</button><span style="font-size:28px;font-weight:700;min-width:40px;text-align:center">'+jorn+'</span><button data-a="t_jorn" data-p="1" style="width:52px;height:52px;border-radius:14px;border:1px solid #B9B2A0;background:#F4F1E8;font-size:24px;font-weight:700;color:#1B2A1F">+</button></div>';
+    h+='<label class="lbl">Horas sueltas (0-6)</label><div class="fila" style="gap:16px"><button data-a="t_horas" data-p="-1" style="width:52px;height:52px;border-radius:14px;border:1px solid #B9B2A0;background:#F4F1E8;font-size:24px;font-weight:700;color:#1B2A1F">−</button><span style="font-size:28px;font-weight:700;min-width:40px;text-align:center">'+horas+'</span><button data-a="t_horas" data-p="1" style="width:52px;height:52px;border-radius:14px;border:1px solid #B9B2A0;background:#F4F1E8;font-size:24px;font-weight:700;color:#1B2A1F">+</button></div>';
+    h+='<div style="background:#F4F1E8;border-radius:12px;padding:10px 14px" class="entre"><span class="sub">Total</span><span style="font-size:20px;font-weight:700">'+totalH+' horas</span></div>';
+    h+='<label class="lbl">Actividad</label><div class="g2" style="gap:8px">';
+    acts.forEach(function(a){var on=E.f.f_tact===a.id;h+='<button data-a="t_act" data-p="'+a.id+'" style="min-height:56px;border-radius:14px;font-size:15px;font-weight:700;color:#1B2A1F;'+(on?'background:#DDEEDF;border:3px solid #1E6B3A':'background:#FFF;border:1px solid #D9D3C3')+'">'+esc(a.valor)+'</button>'});
+    h+='</div><label class="lbl">Lote (opcional)</label><div class="g2" style="gap:8px">';
+    h+='<button data-a="t_pot" data-p="null" style="min-height:48px;border-radius:14px;font-size:15px;font-weight:700;color:#5B6B5F;'+(!E.f.f_tpot||E.f.f_tpot==='null'?'background:#DDEEDF;border:3px solid #1E6B3A':'background:#F4F1E8;border:1px solid #B9B2A0')+'">General</button>';
+    pots.forEach(function(p){var on=E.f.f_tpot===p.id;h+='<button data-a="t_pot" data-p="'+p.id+'" style="min-height:48px;border-radius:14px;font-size:15px;font-weight:700;color:#1B2A1F;'+(on?'background:#DDEEDF;border:3px solid #1E6B3A':'background:#FFF;border:1px solid #B9B2A0')+'">'+esc(p.nombre)+'</button>'});
+    h+='</div><label class="lbl">Nota (opcional)</label><textarea class="inp" data-campo="f_tobs" rows="2" style="height:auto;padding:10px 14px" placeholder="Ej.: hizo mantenimiento extra">'+esc(E.f.f_tobs||'')+'</textarea>';
+    if(sol.length)h+='<div style="background:#FBEBD0;border-radius:12px;padding:10px 12px;font-size:15px;color:#6B4A10">⚠ '+esc(nm)+' ya tiene '+sol.length+' labor(es) en esas fechas.</div>';
+    h+='</div><button class="btn-v" data-a="guardar_trabajo">Guardar trabajo</button><button class="btn-o" data-a="t_volver_socio">Atrás</button></div>';return h;
+  }
+  return'';
+}
+function rAgregarAporte(){
+  var pers=datos.personas.filter(function(p){return p.activo!==false&&!p.deleted_at}),paso=E.pasoA;
+  if(paso==='socio'){
+    var h='<div class="col" style="gap:14px"><span class="sub">Paso 1 de 2</span><h2 style="font-size:22px">¿De qué socio?</h2><div class="g2" style="gap:10px">';
+    pers.forEach(function(p){
+      h+='<button data-a="a_socio" data-p="'+p.id+'" style="min-height:64px;border-radius:16px;font-size:17px;font-weight:700;color:#1B2A1F;background:#FFF;border:1px solid #D9D3C3">'+esc(p.nombre)+'</button>';
+    });
+    h+='</div><button class="btn-o" data-a="sub_ag" data-p="">Cancelar</button></div>';return h;
+  }
+  if(paso==='form'){
+    var nm=nomPers(E.f.f_asocio),forma=E.f.f_aforma||'cuenta';
+    var admins=datos.personas.filter(function(p){return p.rol==='admin'&&p.activo!==false&&!p.deleted_at});
+    var h='<div class="col" style="gap:14px"><span class="sub">Paso 2 de 2 · '+esc(nm)+'</span><h2 style="font-size:22px">Datos del aporte</h2>';
+    h+='<div class="tarj col"><label class="lbl">Valor ($)</label><input class="inp" inputmode="numeric" data-campo="f_avalor" placeholder="Ej.: 500000" value="'+esc(E.f.f_avalor||'')+'">';
+    h+='<label class="lbl">Fecha</label><input class="inp" type="date" data-campo="f_afecha" value="'+esc(E.f.f_afecha||fechaBog())+'">';
+    h+='<label class="lbl">¿Cómo llegó el dinero?</label><div class="g3" style="gap:8px">';
+    ['cuenta','efectivo','directo'].forEach(function(f){var lb=f==='cuenta'?'Transferencia':(f==='efectivo'?'Efectivo':'Pago directo'),on=forma===f;
+      h+='<button data-a="a_forma" data-p="'+f+'" style="min-height:52px;border-radius:14px;font-size:15px;font-weight:700;color:#1B2A1F;'+(on?'background:#DDEEDF;border:3px solid #1E6B3A':'background:#FFF;border:1px solid #B9B2A0')+'">'+lb+'</button>'});
+    h+='</div>';
+    if(forma==='efectivo'){
+      h+='<label class="lbl">¿Quién lo recibió?</label><div class="g2" style="gap:8px">';
+      admins.forEach(function(a){var on=E.f.f_arecibido===a.id;h+='<button data-a="a_recibido" data-p="'+a.id+'" style="min-height:48px;border-radius:14px;font-size:15px;font-weight:700;color:#1B2A1F;'+(on?'background:#DDEEDF;border:3px solid #1E6B3A':'background:#FFF;border:1px solid #B9B2A0')+'">'+esc(a.nombre)+'</button>'});
+      h+='</div>';
+    }
+    if(forma==='directo'){
+      h+='<label class="lbl">Descripción del pago</label><input class="inp" data-campo="f_adesc" placeholder="Ej.: Pagó la cerca" value="'+esc(E.f.f_adesc||'')+'">';
+    }
+    h+='<label class="lbl">Soporte / URL (opcional)</label><input class="inp" data-campo="f_asoporte" placeholder="URL del comprobante" value="'+esc(E.f.f_asoporte||'')+'">';
+    h+='</div><button class="btn-v" data-a="guardar_aporte">Guardar aporte</button><button class="btn-o" data-a="a_volver_socio">Atrás</button></div>';return h;
   }
   return'';
 }
@@ -532,6 +732,7 @@ function rSocios(sl){
   var selG=E.selSocio?grupos.find(function(g){return g.ids.indexOf(E.selSocio)>=0}):null;
   var tajadas=grupos.map(function(g){var l=total?g.capital/total*C:0,on=selG===g;var t={color:g.color,dash:Math.max(l-GAP,.5)+' '+C,offset:-acum,grosor:on?34:28,opa:selG&&!on?.3:1};acum+=l;return t});
   var selP=E.selSocio?conC.find(function(c){return c.persona_id===E.selSocio}):null;
+  var selCp=selP?caps.find(function(c){return c.persona_id===selP.persona_id}):null;
   var h='<div class="col" style="gap:14px"><div class="tarj col" style="gap:14px"><div><span style="font-size:18px;font-weight:700">Participación en la inversión</span><br><span class="sub">Solo lo aprobado. Toque un socio para verlo.</span></div>'+
     '<div style="position:relative;width:220px;height:220px;align-self:center"><svg width="220" height="220" viewBox="0 0 200 200"><circle cx="100" cy="100" r="80" fill="none" stroke="#EAE4D3" stroke-width="28"></circle>';
   tajadas.forEach(function(t){h+='<circle cx="100" cy="100" r="80" fill="none" stroke="'+t.color+'" stroke-width="'+t.grosor+'" stroke-opacity="'+t.opa+'" stroke-dasharray="'+t.dash+'" stroke-dashoffset="'+t.offset+'" transform="rotate(-90 100 100)"></circle>'});
@@ -542,9 +743,11 @@ function rSocios(sl){
   h+='<div class="col" style="gap:4px">';
   conC.forEach(function(c,i){
     var enO=i>=5,on=E.selSocio===c.persona_id;
+    var cp=caps.find(function(x){return x.persona_id===c.persona_id});
     h+='<button data-a="sel_dona" data-p="'+c.persona_id+'" style="display:flex;align-items:center;gap:12px;width:100%;min-height:52px;padding:6px 10px;border-radius:12px;color:#1B2A1F;'+(on?'background:#F4F1E8;border:2px solid #1B2A1F':'background:transparent;border:2px solid transparent')+'">'+
       '<span style="width:16px;height:16px;border-radius:999px;flex-shrink:0;background:'+(enO?OTROS_C:SERIES[i])+'"></span>'+
-      '<span style="flex:1;min-width:0;text-align:left"><span style="font-size:16px;font-weight:700">'+esc(nomPers(c.persona_id))+'</span><br><span class="sub">'+pesos(c.capital)+'</span></span>'+
+      '<span style="flex:1;min-width:0;text-align:left"><span style="font-size:16px;font-weight:700">'+esc(nomPers(c.persona_id))+'</span><br>'+
+      '<span class="sub">Dinero '+pesos(cp?cp.dinero:0)+' · Trabajo '+pesos(cp?cp.valor_trabajo:0)+'</span></span>'+
       '<span style="font-size:18px;font-weight:700">'+pct(c.capital)+'</span></button>';
   });
   h+='</div></div>';
@@ -557,6 +760,18 @@ function rSocios(sl){
     h+='<div class="tarj col"><div class="entre"><span><span style="font-size:18px;font-weight:700;'+(act?'':'color:#8A8577')+'">'+esc(p.nombre)+'</span><br><span class="sub">'+esc(p.email?p.email.split('@')[0]:'')+'</span></span><span class="chip '+chipF+'">'+(act?(ROL_N[p.rol]||'Socio'):'Inactivo')+'</span></div>';
     if(esYo)h+='<span class="sub">Es usted.</span>';
     else if(!sl){
+      if(!p.user_id&&act){
+        if(E.dandoAcceso===p.id){
+          if(!E.f.f_da_usr)E.f.f_da_usr=sugerirUsuario(p.nombre);
+          if(!E.f.f_da_clave)E.f.f_da_clave=genClave();
+          h+='<div class="col" style="gap:8px;background:#F4F1E8;border-radius:14px;padding:12px"><span style="font-size:16px;font-weight:700">Darle acceso</span>'+
+            '<label class="sub">Usuario</label><input class="inp" data-campo="f_da_usr" value="'+esc(E.f.f_da_usr||'')+'">'+
+            '<span class="sub">Clave: <b>'+esc(E.f.f_da_clave)+'</b></span>'+
+            '<div class="g2"><button class="btn-o" style="height:48px" data-a="cancel_da">Cancelar</button><button class="btn-v" style="height:48px" data-a="dar_acceso" data-p="'+p.id+'">Guardar</button></div></div>';
+        } else {
+          h+='<button data-a="ini_da" data-p="'+p.id+'" style="min-height:48px;border-radius:14px;border:2px solid #1E6B3A;background:transparent;color:#1E6B3A;font-size:16px;font-weight:700;width:100%">Darle acceso</button>';
+        }
+      }
       h+='<div class="g3" style="gap:6px">';ROLES.forEach(function(r){var on=p.rol===r[0];h+='<button data-a="cambiar_rol" data-p="'+p.id+'" data-p2="'+r[0]+'" style="min-height:46px;border-radius:12px;font-size:15px;font-weight:700;color:#1B2A1F;'+(on?'background:#DDEEDF;border:3px solid #1E6B3A':'background:#FFF;border:1px solid #B9B2A0')+'">'+r[1]+'</button>'});
       h+='</div><div class="g2"><button data-a="nueva_clave" data-p="'+p.id+'" style="min-height:48px;border-radius:14px;border:1px solid #B9B2A0;background:#F4F1E8;font-size:16px;color:#1B2A1F">Nueva clave</button>'+
         '<button data-a="toggle_pers" data-p="'+p.id+'" style="min-height:48px;border-radius:14px;font-size:16px;font-weight:700;'+(act?'border:2px solid #8A2A1B;background:transparent;color:#8A2A1B':'border:0;background:#1E6B3A;color:#FFF')+'">'+(act?'Desactivar':'Activar')+'</button></div>';
@@ -567,6 +782,7 @@ function rSocios(sl){
         '<button data-a="cancel_desact" style="height:40px;border:0;background:transparent;font-size:14px;color:#5B6B5F;text-decoration:underline">Cancelar</button></div>';
     }
     if(p._claveNueva)h+='<span style="font-size:15px;background:#DDEEDF;color:#14492A;border-radius:10px;padding:8px 10px">Clave: <b>'+esc(p._claveNueva)+'</b>. Désela en persona.</span>';
+    if(p._accesoOk)h+='<span style="font-size:15px;background:#DDEEDF;color:#14492A;border-radius:10px;padding:8px 10px">Acceso creado. Clave: <b>'+esc(p._accesoOk)+'</b>. Désela en persona.</span>';
     h+='</div>';
   });
   h+='</div>';return h;
@@ -620,11 +836,11 @@ $app.addEventListener('click',function(e){
   switch(a){
   case'instalar':hInstalar();return;
   case'entrar':hEntrar();return;
-  case'ir_tab':E.tab=p;E.aviso='';E.rechazando=null;E.corrigiendo=null;E.gAcc=null;E.movProd=null;E.subAg=null;E.paso='inicio';render();return;
+  case'ir_tab':E.tab=p;E.aviso='';E.rechazando=null;E.corrigiendo=null;E.gAcc=null;E.movProd=null;E.subAg=null;E.paso='inicio';E.pasoT='socio';E.pasoA='socio';E.editandoNota=null;E.verAporteGrupo=null;E.rechAporte=null;E.dandoAcceso=null;render();return;
   case'ir_revisar':E.pantalla='revisar';render();return;
   case'ir_cuenta':E.pantalla='cuenta';render();return;
   case'volver':if(yo){E.pantalla=yo.rol==='admin'?'admin':(yo.rol==='revisor'?'revisor':'socio')}else E.pantalla='login';render();return;
-  case'sub_ag':E.subAg=p;render();return;
+  case'sub_ag':E.subAg=p||null;E.pasoT='socio';E.pasoA='socio';E.aviso='';render();return;
   case'empezar_flujo':E.paso='actividad';E.selAct=null;E.selPot=null;E.aviso='';render();return;
   case'cancel_flujo':E.paso='inicio';render();return;
   case'sel_act':E.selAct=p;E.paso='potrero';render();return;
@@ -632,14 +848,14 @@ $app.addEventListener('click',function(e){
   case'sel_pot':E.selPot=p;E.paso='confirmar';render();return;
   case'empezar':hEmpezar();return;
   case'terminar':hTerminar();return;
-  case'aprobar_lab':encolar('labores','editar',p,{estado:'aprobada'});E.aviso='Aprobada.';E.avisoOk=true;return;
-  case'aprobar_todas':datos.labores.filter(function(l){return l.estado==='pendiente'&&l.fin&&!l.deleted_at}).forEach(function(l){encolar('labores','editar',l.id,{estado:'aprobada'})});E.aviso='Todas aprobadas.';E.avisoOk=true;return;
+  case'aprobar_lab':encolar('labores','editar',p,payloadAprobar());E.aviso='Aprobada.';E.avisoOk=true;return;
+  case'aprobar_todas':datos.labores.filter(function(l){return l.estado==='pendiente'&&l.fin&&!l.deleted_at}).forEach(function(l){encolar('labores','editar',l.id,payloadAprobar())});E.aviso='Todas aprobadas.';E.avisoOk=true;return;
   case'ini_rech':E.rechazando=p;E.corrigiendo=null;E.aviso='';render();return;
   case'cancel_rech':E.rechazando=null;render();return;
-  case'rechazar':encolar('labores','editar',p,{estado:'rechazada',motivo_rechazo:p2||btn.textContent.trim()});E.rechazando=null;E.aviso='Rechazada.';return;
+  case'rechazar':encolar('labores','editar',p,payloadRechazar(p2||btn.textContent.trim()));E.rechazando=null;E.aviso='Rechazada.';return;
   case'ini_cor':var lab=datos.labores.find(function(l){return l.id===p});E.corrigiendo=p;E.rechazando=null;E.f.f_cor_ini=lab&&lab.inicio?lab.inicio.slice(0,16):'';E.f.f_cor_fin=lab&&lab.fin?lab.fin.slice(0,16):'';render();return;
   case'cancel_cor':E.corrigiendo=null;render();return;
-  case'guardar_cor':var ini=E.f.f_cor_ini,fin=E.f.f_cor_fin;if(!ini||!fin){E.aviso='Escriba las dos horas.';render();return}encolar('labores','editar',p,{inicio:new Date(ini).toISOString(),fin:new Date(fin).toISOString()});E.corrigiendo=null;E.aviso='Horario corregido.';return;
+  case'guardar_cor':var ini=E.f.f_cor_ini,fin=E.f.f_cor_fin;if(!ini||!fin){E.aviso='Escriba las dos horas.';render();return}encolar('labores','editar',p,payloadCorregirHorario(new Date(ini).toISOString(),new Date(fin).toISOString()));E.corrigiendo=null;E.aviso='Horario corregido.';return;
   case'agregar_act':hAgregarAct();return;
   case'toggle_act':var ac=datos.actividades.find(function(x){return x.id===p});if(ac){encolar('catalogos','editar',p,{activo:ac.activo===false});ac.activo=ac.activo===false;guardar();render()}return;
   case'agregar_pot':hAgregarPot();return;
@@ -664,6 +880,31 @@ $app.addEventListener('click',function(e){
   case'inv_abrir':E.movProd=p;E.movTipo=p2;E.aviso='';render();return;
   case'inv_cancel':E.movProd=null;E.movTipo=null;render();return;
   case'inv_cant':hInvCant(p,parseInt(p2,10));return;
+  case't_socio':E.f.f_tsocio=p;E.pasoT='form';E.f.f_tfecha=fechaBog();E.f.f_tdias='uno';E.f.f_tjorn='0';E.f.f_thoras='0';E.f.f_tact=null;E.f.f_tpot=null;E.f.f_tobs='';E.f.f_thasta='';render();return;
+  case't_volver_socio':E.pasoT='socio';render();return;
+  case't_dias':E.f.f_tdias=p;render();return;
+  case't_jorn':var nj=Math.max(0,parseInt(E.f.f_tjorn||'0',10)+parseInt(p,10));E.f.f_tjorn=''+nj;render();return;
+  case't_horas':var nh=Math.max(0,Math.min(6,parseInt(E.f.f_thoras||'0',10)+parseInt(p,10)));E.f.f_thoras=''+nh;render();return;
+  case't_act':E.f.f_tact=p;render();return;
+  case't_pot':E.f.f_tpot=p;render();return;
+  case'guardar_trabajo':hGuardarTrabajo();return;
+  case'a_socio':E.f.f_asocio=p;E.pasoA='form';E.f.f_afecha=fechaBog();E.f.f_avalor='';E.f.f_aforma='cuenta';E.f.f_arecibido=null;E.f.f_adesc='';E.f.f_asoporte='';render();return;
+  case'a_volver_socio':E.pasoA='socio';render();return;
+  case'a_forma':E.f.f_aforma=p;render();return;
+  case'a_recibido':E.f.f_arecibido=p;render();return;
+  case'guardar_aporte':hGuardarAporte();return;
+  case'ver_aportes':E.verAporteGrupo=E.verAporteGrupo===p?null:p;render();return;
+  case'si_entro':encolar('aportes','editar',p,payloadVerificarAporte());E.aviso='Aporte verificado.';E.avisoOk=true;return;
+  case'ini_rech_ap':E.rechAporte=p;render();return;
+  case'cancel_rech_ap':E.rechAporte=null;render();return;
+  case'no_entro':encolar('aportes','editar',p,payloadNoEntro(p2||btn.textContent.trim()));E.rechAporte=null;E.aviso='Aporte marcado como no entró.';E.avisoOk=true;return;
+  case'verificar_todos':hVerificarTodos(p);return;
+  case'editar_nota':E.editandoNota=p;E.f.f_nota='';render();return;
+  case'cancel_nota':E.editandoNota=null;render();return;
+  case'guardar_nota':hGuardarNota(p);return;
+  case'ini_da':E.dandoAcceso=p;E.f.f_da_usr='';E.f.f_da_clave='';render();return;
+  case'cancel_da':E.dandoAcceso=null;E.f.f_da_usr='';E.f.f_da_clave='';render();return;
+  case'dar_acceso':hDarAcceso(p);return;
   case'descartar':var ix=cola.findIndex(function(i){return i.id_local===p});if(ix>=0){var it=cola.splice(ix,1)[0];it.estado='descarte';it.ts_desc=Date.now();descarte.push(it);arrastrar(p);guardar();render()}return;
   case'reintentar':var ri=cola.find(function(i){return i.id_local===p});if(ri){ri.estado='pend';ri.error=null;guardar();flush();render()}return;
   case'salir':hSalir();return;
@@ -702,28 +943,27 @@ function hEntrar(){
 function hEmpezar(){
   if(labAbierta()){E.aviso='Ya tiene una labor abierta. Termínela primero.';E.paso='inicio';render();return}
   var id=uuid(),potId=E.selPot==='null'?null:E.selPot;
-  var payload={persona_id:yo.persona_id,fecha:fechaBog(),actividad_id:E.selAct,inicio:isoNow(),potrero_id:potId,modalidad:'participacion',reparto:[]};
-  encolar('labores','crear',id,payload);E.paso='inicio';E.aviso='';
+  encolar('labores','crear',id,payloadEmpezar(yo.persona_id,fechaBog(),E.selAct,isoNow(),potId));E.paso='inicio';E.aviso='';
 }
 function hTerminar(){
   var ab=labAbierta();if(!ab){E.aviso='No hay labor abierta.';render();return}
   var empItem=cola.find(function(c){return c.id===ab.id&&c.op==='crear'});
   var deps=empItem?[empItem.id_local]:[];
-  encolar('labores','editar',ab.id,{fin:isoNow()},deps);
+  encolar('labores','editar',ab.id,payloadTerminar(isoNow()),deps);
   var mt=minEntre(ab.inicio,new Date().toISOString());
   E.aviso=nomAct(ab.actividad_id)+', '+durM(mt)+'. Guardado.';E.avisoOk=true;
 }
 function hAgregarAct(){
   var n=(E.f.f_nact||'').trim();if(!n){E.aviso='Escriba el nombre.';render();return}
-  var id=uuid();encolar('catalogos','crear',id,{tipo:'actividad',valor:n,orden:100,activo:true,extra:{}});
-  datos.actividades.push({id:id,tipo:'actividad',valor:n,orden:100,activo:true,extra:{}});
+  var id=uuid(),pl=payloadCrearActividad(n,100,true);encolar('catalogos','crear',id,pl);
+  datos.actividades.push(Object.assign({id:id},pl));
   E.f.f_nact='';E.aviso='«'+n+'» agregada.';E.avisoOk=true;guardar();render();
 }
 function hAgregarPot(){
   var n=(E.f.f_nlote||'').trim();if(!n){E.aviso='Escriba el nombre.';render();return}
-  var id=uuid(),ha=numP(E.f.f_nha)||null;
-  encolar('potreros','crear',id,{codigo:n.toUpperCase(),nombre:n,area_ha:ha});
-  datos.potreros.push({id:id,codigo:n.toUpperCase(),nombre:n,area_ha:ha,activo:true});
+  var id=uuid(),ha=numP(E.f.f_nha)||null,pl2=payloadCrearPotrero(n.toUpperCase(),n,ha);
+  encolar('potreros','crear',id,pl2);
+  datos.potreros.push(Object.assign({id:id,activo:true},pl2));
   E.f.f_nlote='';E.f.f_nha='';E.aviso='Lote «'+n+'» agregado.';E.avisoOk=true;guardar();render();
 }
 function hGGuardar(loteId){
@@ -731,18 +971,18 @@ function hGGuardar(loteId){
   if(!(n>0)){E.aviso='Escriba cuántos animales.';render();return}
   if(acc==='entrada'){
     var kg=numP(E.f.f_gkg),pre=numP(E.f.f_gpre);if(!(kg>0&&pre>0)){E.aviso='Escriba peso y precio.';render();return}
-    encolar('entradas_ganado','crear',uuid(),{lote_id:loteId,fecha:fechaBog(),cabezas:n,kg_total:kg,precio_kg:pre});E.aviso='Entraron '+n+' animales.';
+    encolar('entradas_ganado','crear',uuid(),payloadEntradaGanado(loteId,fechaBog(),n,kg,pre));E.aviso='Entraron '+n+' animales.';
   }
   if(acc==='pesaje'){
     var kg2=numP(E.f.f_gkg);if(!(kg2>0)){E.aviso='Escriba el peso promedio.';render();return}
-    encolar('pesajes_lote','crear',uuid(),{lote_id:loteId,fecha:fechaBog(),n_animales:n,peso_promedio_kg:kg2});E.aviso='Pesaje guardado.';
+    encolar('pesajes_lote','crear',uuid(),payloadPesaje(loteId,fechaBog(),n,kg2));E.aviso='Pesaje guardado.';
   }
   if(acc==='venta'){
     var kg3=numP(E.f.f_gkg),pre3=numP(E.f.f_gpre);if(!(kg3>0&&pre3>0)){E.aviso='Escriba peso y precio.';render();return}
-    encolar('ventas','crear',uuid(),{lote_id:loteId,fecha:fechaBog(),cabezas:n,peso_total_kg:kg3,precio_kg:pre3});E.aviso='Venta guardada.';
+    encolar('ventas','crear',uuid(),payloadVenta(loteId,fechaBog(),n,kg3,pre3));E.aviso='Venta guardada.';
   }
   if(acc==='baja'){
-    encolar('bajas_ganado','crear',uuid(),{lote_id:loteId,fecha:fechaBog(),cabezas:n,causa:E.f.f_gcausa||'Murió'});E.aviso='Baja registrada.';
+    encolar('bajas_ganado','crear',uuid(),payloadBaja(loteId,fechaBog(),n,E.f.f_gcausa||'Murió'));E.aviso='Baja registrada.';
   }
   E.avisoOk=true;E.gAcc=null;E.gLote=null;
 }
@@ -807,19 +1047,66 @@ function hReactivar(id){
 function hAgregarProd(){
   var n=(E.f.f_inom||'').trim();if(!n){E.aviso='Escriba el nombre.';render();return}
   var id=uuid(),un=E.f.f_iun||'kg';
-  encolar('productos','crear',id,{nombre:n,unidad:un});
+  encolar('productos','crear',id,payloadCrearProducto(n,un));
   datos.stock.push({producto_id:id,nombre:n,unidad:un,stock:0});
   E.f.f_inom='';E.aviso='«'+n+'» agregado.';E.avisoOk=true;guardar();render();
 }
 function hInvCant(prodId,cant){
   var tipo=E.movTipo,tipoDb=tipo==='entrada'?'entrada':'salida',motivo=tipo==='entrada'?'compra':'labor';
-  encolar('movimientos_inventario','crear',uuid(),{producto_id:prodId,tipo:tipoDb,motivo:motivo,fecha:fechaBog(),cantidad:tipo==='entrada'?cant:-cant});
+  encolar('movimientos_inventario','crear',uuid(),payloadMovInventario(prodId,tipoDb,motivo,fechaBog(),tipo==='entrada'?cant:-cant));
   var pr=datos.stock.find(function(x){return x.producto_id===prodId});
   if(pr)pr.stock=(pr.stock||0)+(tipo==='entrada'?cant:-cant);
   E.aviso=(tipo==='entrada'?'Entraron ':'Salieron ')+cant+(pr?' '+pr.unidad+' de '+pr.nombre:'')+'.'  ;E.avisoOk=true;
   E.movProd=null;E.movTipo=null;guardar();render();
 }
-function hSalir(){if(sb)sb.auth.signOut().catch(function(){});yo=null;localStorage.removeItem(LS_YO);E={pantalla:'login',tab:'hoy',subAg:null,paso:'inicio',selAct:null,selPot:null,rechazando:null,corrigiendo:null,gAcc:null,gLote:null,gVer:null,gNuevo:false,movProd:null,movTipo:null,selSocio:null,desactivando:null,f:{},aviso:'',avisoOk:false};render()}
+function hGuardarTrabajo(){
+  var pid=E.f.f_tsocio,fecha=E.f.f_tfecha||fechaBog();
+  var dias=E.f.f_tdias||'uno',hasta=dias==='varios'&&E.f.f_thasta?E.f.f_thasta:null;
+  var jorn=parseInt(E.f.f_tjorn||'0',10),horas=parseInt(E.f.f_thoras||'0',10);
+  var totalH=jorn*7+horas;
+  if(!pid){E.aviso='Seleccione un socio.';render();return}
+  if(totalH<1){E.aviso='Ingrese al menos 1 hora de trabajo.';render();return}
+  if(!E.f.f_tact){E.aviso='Seleccione una actividad.';render();return}
+  if(dias==='varios'&&!hasta){E.aviso='Indique la fecha final.';render();return}
+  var potId=(!E.f.f_tpot||E.f.f_tpot==='null')?null:E.f.f_tpot;
+  var id=uuid();
+  encolar('labores','crear',id,payloadLaborTardia(pid,fecha,hasta,totalH,jorn,E.f.f_tact,potId,E.f.f_tobs||null,yo.persona_id));
+  E.subAg=null;E.pasoT='socio';E.aviso='Trabajo de '+nomPers(pid)+' guardado.';E.avisoOk=true;
+}
+function hGuardarAporte(){
+  var pid=E.f.f_asocio,fecha=E.f.f_afecha||fechaBog(),valor=numP(E.f.f_avalor),forma=E.f.f_aforma||'cuenta';
+  if(!pid){E.aviso='Seleccione un socio.';render();return}
+  if(!(valor>0)){E.aviso='Ingrese el valor del aporte.';render();return}
+  if(forma==='efectivo'&&!E.f.f_arecibido){E.aviso='Indique quién recibió el efectivo.';render();return}
+  if(forma==='directo'&&!(E.f.f_adesc||'').trim()){E.aviso='Describa el pago directo.';render();return}
+  var id=uuid();
+  encolar('aportes','crear',id,payloadAporte(pid,fecha,valor,forma,E.f.f_arecibido||null,(E.f.f_adesc||'').trim()||null,(E.f.f_asoporte||'').trim()||null,yo.persona_id));
+  E.subAg=null;E.pasoA='socio';E.aviso='Aporte de '+pesos(valor)+' guardado.';E.avisoOk=true;
+}
+function hVerificarTodos(pid){
+  var pendA=datos.aportes.filter(function(a){return a.estado==='pendiente'&&a.persona_id===pid&&puedeVerificar(a)});
+  pendA.forEach(function(a){encolar('aportes','editar',a.id,payloadVerificarAporte())});
+  E.aviso=pendA.length+' aporte(s) verificado(s).';E.avisoOk=true;
+}
+function hGuardarNota(labId){
+  var nota=(E.f.f_nota||'').trim();
+  var empItem=cola.find(function(c){return c.id===labId&&c.op==='crear'});
+  var deps=empItem?[empItem.id_local]:[];
+  encolar('labores','editar',labId,payloadNota(nota||null),deps);
+  E.editandoNota=null;E.aviso=nota?'Nota guardada.':'Nota eliminada.';E.avisoOk=true;
+}
+function hDarAcceso(pid){
+  var usr=(E.f.f_da_usr||'').trim().toLowerCase(),clave=E.f.f_da_clave;
+  if(usr.length<3){E.aviso='El usuario debe tener 3+ letras.';render();return}
+  E.aviso='Creando acceso…';render();
+  sb.functions.invoke('usuarios',{body:payloadDarAcceso(pid,usr,clave)}).then(function(r){
+    if(r.error||(r.data&&r.data.error)){E.aviso=(r.data&&r.data.error)||r.error.message||'Error.';render();return}
+    var p=datos.personas.find(function(x){return x.id===pid});
+    if(p){p.user_id='temp';p._accesoOk=clave}
+    E.dandoAcceso=null;E.aviso='Acceso creado. Clave: '+clave;E.avisoOk=true;render();refrescar();
+  }).catch(function(e){E.aviso=e.message;render()});
+}
+function hSalir(){if(sb)sb.auth.signOut().catch(function(){});yo=null;localStorage.removeItem(LS_YO);E={pantalla:'login',tab:'hoy',subAg:null,paso:'inicio',pasoT:'socio',pasoA:'socio',selAct:null,selPot:null,rechazando:null,corrigiendo:null,gAcc:null,gLote:null,gVer:null,gNuevo:false,movProd:null,movTipo:null,selSocio:null,desactivando:null,editandoNota:null,verAporteGrupo:null,rechAporte:null,dandoAcceso:null,f:{},aviso:'',avisoOk:false};render()}
 
 /* ─── Arranque ─── */
 function arrancar(){
