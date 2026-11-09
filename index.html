@@ -48,6 +48,51 @@ input,select,textarea{font-family:inherit;font-size:18px}
 .entre{display:flex;justify-content:space-between;align-items:center;gap:8px}
 .link-btn{border:0;background:transparent;font-size:16px;color:#1E6B3A;font-weight:700;text-align:left;padding:0;text-decoration:none}
 .mt{margin-top:14px}
+/* Escritorio (admin y revisor desde 1024 px) */
+.pc{display:flex;height:100%;overflow:hidden}
+.pc-menu{width:232px;flex-shrink:0;background:#1B2A1F;color:#F4F1E8;display:flex;flex-direction:column;padding:20px 14px;gap:4px;overflow-y:auto}
+.pc-item{display:flex;align-items:center;gap:10px;height:44px;border:0;border-radius:10px;padding:0 12px;font-size:15px;font-weight:700;background:transparent;color:#DCE3DD;width:100%;text-align:left;flex-shrink:0}
+.pc-item.on{background:#1E6B3A;color:#FFF}
+.pc-badge{background:#E8A33D;color:#1B2A1F;border-radius:999px;min-width:22px;height:20px;padding:0 6px;font-size:12px;line-height:20px;text-align:center}
+.pc-cuerpo{flex:1;min-width:0;display:flex;flex-direction:column}
+.pc-cab{height:64px;flex-shrink:0;display:flex;align-items:center;gap:12px;padding:0 28px;border-bottom:1px solid #D9D3C3;background:#FFF}
+.pc-main{flex:1;overflow-y:auto;padding:22px 28px 28px;display:flex;flex-direction:column;gap:18px}
+.pc-main>*{flex-shrink:0}
+.pc-caja{background:#FFF;border:1px solid #D9D3C3;border-radius:14px;overflow:hidden}
+.pc-tit{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid #D9D3C3;font-size:16px;font-weight:700;flex-wrap:wrap}
+.pc-th,.pc-tr{display:grid;gap:10px;padding:8px 16px;align-items:center}
+.pc-th{background:#F4F1E8;font-size:12px;font-weight:700;color:#5B6B5F;text-transform:uppercase;letter-spacing:.04em}
+.pc-tr{border-top:1px solid #EAE4D3;font-size:14px;padding-top:10px;padding-bottom:10px}
+.pc-tr.gris{background:#FAF8F2;color:#8A8577}
+.pc-sub{font-size:12px;color:#5B6B5F}
+.pc-btn{height:34px;border-radius:8px;border:0;background:#1E6B3A;color:#FFF;font-size:13px;font-weight:700;padding:0 10px;white-space:nowrap}
+.pc-btn-r{height:34px;border-radius:8px;border:1px solid #8A2A1B;background:#FFF;color:#8A2A1B;font-size:13px;font-weight:700;padding:0 10px;white-space:nowrap}
+.pc-btn-o{height:34px;border-radius:8px;border:1px solid #B9B2A0;background:#F4F1E8;color:#1B2A1F;font-size:13px;padding:0 10px;white-space:nowrap}
+.pc-btn:disabled{background:#EAE4D3;color:#8A8577;cursor:default}
+.pc-fil{height:36px;border-radius:999px;padding:0 14px;font-size:14px;font-weight:700;background:#FFF;color:#1B2A1F;border:1px solid #B9B2A0}
+.pc-fil.on{background:#1B2A1F;color:#F4F1E8;border-color:#1B2A1F}
+.pc-kpi{border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;gap:4px}
+.pc-alerta{border-radius:8px;padding:8px 10px;font-size:13px;background:#FBEBD0;color:#6B4A10}
+.pc-alerta.p1{background:#F6DDD8;color:#8A2A1B}.pc-alerta.p3{background:#EAE4D3;color:#5B6B5F}
+.pc-angosto{max-width:640px;width:100%}
+.pc-ganado>.col{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:start}
+.pc-ganado>.col>:first-child,.pc-ganado>.col>:last-child{grid-column:1/-1}
+.pc .chip{font-size:12px;padding:3px 10px;justify-self:start}
+.pc-inline{grid-column:1/-1;background:#F4F1E8;border-radius:10px;padding:10px 12px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.inf-fondo{position:fixed;inset:0;background:rgba(27,42,31,.55);display:flex;align-items:flex-start;justify-content:center;padding:24px;overflow-y:auto;z-index:10}
+.inf-hoja{width:720px;background:#FFF;border-radius:6px;box-shadow:0 10px 40px rgba(0,0,0,.3);padding:36px 40px;display:flex;flex-direction:column;gap:12px;font-size:13px;color:#1B2A1F}
+.inf-hoja h2{font-size:15px;color:#1E6B3A;margin-top:6px}
+.inf-t{display:grid;gap:8px;padding:3px 0;border-bottom:1px solid #EAE4D3}
+.inf-t.cab{border-bottom:1px solid #1B2A1F;font-weight:700}
+@media (min-width:1024px){.pant{max-width:480px;width:100%;margin:0 auto;box-shadow:0 0 0 1px #D9D3C3}}
+@media print{
+  @page{size:A4;margin:14mm}
+  html,body,#app{height:auto!important;overflow:visible!important;background:#FFF!important}
+  .pc,.inf-no-imp{display:none!important}
+  .inf-fondo{position:static;background:none;padding:0;overflow:visible;display:block}
+  .inf-hoja{width:auto;box-shadow:none;border-radius:0;padding:0}
+  .inf-t,.inf-hoja h2{break-inside:avoid}
+}
 </style>
 </head>
 <body>
@@ -56,7 +101,7 @@ input,select,textarea{font-family:inherit;font-size:18px}
 <script>
 'use strict';
 
-var VERSION = '1.2.0';
+var VERSION = '1.3.0';
 var SB_URL = 'https://hwvufzeayumqjxjtebvp.supabase.co';
 var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh3dnVmemVheXVtcWp4anRlYnZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkwNzYzMTUsImV4cCI6MjEwNDY1MjMxNX0.EpuvrTXAIqTK-1WIsYoJSrP7XBG0jE6FAoY1P3QfL_c';
 var TOPE_H = 7;
@@ -89,10 +134,10 @@ var TAB_D = {
 /* ─── Estado ─── */
 var sb = null;
 var yo = null, dominio = '';
-var datos = {actividades:[],potreros:[],labores:[],personas:[],ganadoLotes:[],ganadoHist:{},capitalPersona:[],stock:[],config:{},jornales:[],alertas:[],aportes:[]};
+var datos = {actividades:[],potreros:[],labores:[],personas:[],ganadoLotes:[],ganadoHist:{},capitalPersona:[],stock:[],config:{},jornales:[],alertas:[],aportes:[],tiempoAct:[],trabajoMes:[]};
 var cola = [], descarte = [];
 var ultimoSync = {};
-var E = {pantalla:'cargando',tab:'hoy',subAg:null,paso:'inicio',pasoT:'socio',pasoA:'socio',selAct:null,selPot:null,rechazando:null,corrigiendo:null,desactivando:null,gAcc:null,gLote:null,gVer:null,gNuevo:false,movProd:null,movTipo:null,selSocio:null,editandoNota:null,verAporteGrupo:null,rechAporte:null,dandoAcceso:null,f:{},aviso:'',avisoOk:false};
+var E = {pantalla:'cargando',tab:'hoy',subAg:null,paso:'inicio',pasoT:'socio',pasoA:'socio',selAct:null,selPot:null,rechazando:null,corrigiendo:null,desactivando:null,gAcc:null,gLote:null,gVer:null,gNuevo:false,movProd:null,movTipo:null,selSocio:null,editandoNota:null,verAporteGrupo:null,rechAporte:null,dandoAcceso:null,pc:'resumen',pcSel:{},pcMas:null,apFiltro:'todos',apSocio:'todos',informe:false,f:{},aviso:'',avisoOk:false};
 var flushing = false, timerR = 0;
 
 /* ─── Utilidades ─── */
@@ -120,9 +165,25 @@ function nomPers(id){var p=datos.personas.find(function(x){return x.id===id});re
 /* ─── Helpers ─── */
 function verificadoresDe(ap){return datos.personas.filter(function(p){return p.rol==='admin'&&p.activo!==false&&!p.deleted_at&&p.id!==ap.persona_id&&p.id!==ap.registrado_por})}
 function puedeVerificar(ap){if(!yo||yo.rol!=='admin')return false;return yo.persona_id!==ap.persona_id&&yo.persona_id!==ap.registrado_por}
-function laborAjena(l){return!!yo&&l.persona_id!==yo.persona_id&&!(l.tardio&&l.registrado_por===yo.persona_id)}
+// Quién aprueba la labor de P: admins activos distintos de P (y de quien la cargó, si es tardía),
+// más el aprobador configurado para las labores de los admins.
+function aprobadoresLabor(l){
+  var cfg=String((datos.config||{}).aprobador_admin_persona_id||'').trim();
+  var P=datos.personas.find(function(x){return x.id===l.persona_id});
+  var lista=datos.personas.filter(function(p){return p.rol==='admin'&&p.activo!==false&&!p.deleted_at&&p.id!==l.persona_id&&!(l.tardio&&p.id===l.registrado_por)});
+  if(P&&P.rol==='admin'&&cfg&&cfg!==l.persona_id&&!lista.some(function(p){return p.id===cfg})){
+    var c=datos.personas.find(function(x){return x.id===cfg&&x.activo!==false&&!x.deleted_at});if(c)lista.push(c);
+  }
+  return lista;
+}
+function laborAjena(l){return!!yo&&aprobadoresLabor(l).some(function(p){return p.id===yo.persona_id})}
+function motivoBloqueo(l){if(yo&&l.persona_id===yo.persona_id)return'Es su propia labor';if(yo&&l.tardio&&l.registrado_por===yo.persona_id)return'Lo cargó usted';return'No le toca aprobarla'}
+function quienApruebaTxt(l){var a=aprobadoresLabor(l);return a.length?'Lo aprueba: '+a.map(function(p){return p.nombre}).join(' o '):'Falta otro administrador'}
 function laborPorAprobar(l){return l.estado==='pendiente'&&(l.fin||l.tardio)&&!l.deleted_at}
-var ALERTA_TXT={ya_tiene_labores_en_esas_fechas:'Ojo: este socio ya tiene labores registradas en esas fechas. Revise que no se cuente dos veces.',tope_dia:'Pasa del máximo de horas que se reconocen en un día.',traslape:'Se cruza en el horario con otra labor de este socio.'};
+var ALERTA_TXT={ya_tiene_labores_en_esas_fechas:'Ojo: este socio ya tiene labores registradas en esas fechas. Revise que no se cuente dos veces.',tope_dia:'Pasa del máximo de horas que se reconocen en un día.',traslape:'Se cruza en el horario con otra labor de este socio.',
+  sin_horas:'No tiene horas registradas.',fecha_futura:'La fecha es futura.',jornada_larga:'La jornada es muy larga.',hora_fuera_de_fecha:'Las horas no caen en la fecha de la labor.',sin_jornal:'No hay valor de jornal para ese año.'};
+var ALERTA_CORTA={ya_tiene_labores_en_esas_fechas:'ya tiene labores en esas fechas',tope_dia:'pasa del máximo de un día',traslape:'se cruza con otra labor',sin_horas:'sin horas',fecha_futura:'fecha futura',jornada_larga:'jornada muy larga',hora_fuera_de_fecha:'horas fuera de la fecha',sin_jornal:'sin valor de jornal',registro_tardio:'registro tardío'};
+function alertaLegible(t){return String(t||'').replace(/[a-z]+(_[a-z]+)+/g,function(k){return ALERTA_CORTA[k]||k})}
 function sugerirUsuario(nombre){return nombre.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/\s+/g,'').replace(/[^a-z0-9]/g,'')}
 function solapaLabores(pid,desde,hasta){return datos.labores.filter(function(l){return l.persona_id===pid&&!l.deleted_at&&l.estado!=='rechazada'&&l.fecha<=hasta&&(l.fecha_hasta||l.fecha)>=desde})}
 function inicioMesCargado(){return fechaBog().slice(0,8)+'01'}
@@ -174,6 +235,8 @@ function payloadCrearPotrero(codigo,nombre,area_ha){return{codigo:codigo,nombre:
 function payloadCrearProducto(nombre,unidad){return{nombre:nombre,unidad:unidad}}
 function payloadMovInventario(producto_id,tipo,motivo,fecha,cantidad){return{producto_id:producto_id,tipo:tipo,motivo:motivo,fecha:fecha,cantidad:cantidad}}
 function payloadDarAcceso(persona_id,usuario,clave){return{accion:'dar_acceso',persona_id:persona_id,usuario:usuario,clave:clave}}
+function payloadActividadActiva(activo){return{activo:activo}}
+function payloadCambiarRol(rol){return{rol:rol}}
 
 /* ─── Almacenamiento local ─── */
 function guardar(){try{localStorage.setItem(LS_COLA,JSON.stringify(cola));localStorage.setItem(LS_DESC,JSON.stringify(descarte));localStorage.setItem(LS_DATOS,JSON.stringify(datos));localStorage.setItem(LS_SYNC,JSON.stringify(ultimoSync));if(yo)localStorage.setItem(LS_YO,JSON.stringify(yo))}catch(e){}}
@@ -197,6 +260,10 @@ function aplicarLocal(tabla,op,id,payload){
     else if(op==='editar'){var j=datos.aportes.findIndex(function(a){return a.id===id});if(j>=0)Object.assign(datos.aportes[j],payload)}
   }
   if(tabla==='personas'&&op==='crear'){datos.personas.push(Object.assign({id:id,activo:true},payload))}
+}
+// Lo que el servidor devuelve aún no trae las ediciones que siguen en la cola.
+function reaplicarCola(tabla,lista){
+  cola.forEach(function(c){if(c.tabla===tabla&&c.op==='editar'&&c.estado!=='revisar'){var x=lista.find(function(r){return r.id===c.id});if(x)Object.assign(x,c.payload)}});
 }
 function clasificar(res){
   if(!res)return'red';
@@ -281,19 +348,24 @@ function refrescar(){
     prom.push(sb.from('v_ganado_lote').select('*').then(function(r){if(!r.error&&r.data)datos.ganadoLotes=r.data}).catch(function(){}));
     prom.push(sb.from('v_capital_persona').select('*').then(function(r){if(!r.error&&r.data)datos.capitalPersona=r.data}).catch(function(){}));
     prom.push(sb.from('v_stock').select('*').then(function(r){if(!r.error&&r.data)datos.stock=r.data}).catch(function(){}));
+    var per=fechaBog().slice(0,7);
+    prom.push(sb.from('v_tiempo_actividad').select('*').eq('periodo',per).then(function(r){if(!r.error&&r.data)datos.tiempoAct=r.data}).catch(function(){}));
+    prom.push(sb.from('movimientos_inversion').select('persona_id,valor').eq('tipo','trabajo').eq('periodo',per).then(function(r){if(!r.error&&r.data)datos.trabajoMes=r.data}).catch(function(){}));
   }
-  var qAp=sb.from('v_aportes').select('*');
-  if(yo.rol==='socio')qAp=qAp.eq('persona_id',yo.persona_id);
-  prom.push(qAp.order('fecha',{ascending:false}).limit(200).then(function(r){if(!r.error&&r.data)datos.aportes=r.data}).catch(function(){}));
-  var hoy=fechaBog();
-  var qL=sb.from('labores').select('*');
-  if(yo.rol==='socio')qL=qL.eq('persona_id',yo.persona_id);
-  prom.push(qL.gte('fecha',hoy.slice(0,8)+'01').is('deleted_at',null).order('fecha',{ascending:false}).limit(200).then(function(r){
-    if(r.data){
-      var rescate=datos.labores.slice();
-      if(datos.labores.length>10&&r.data.length===0){console.warn('Respuesta sospechosa: 0 labores donde había muchas.')}
-      else{var m=new Map(r.data.map(function(l){return[l.id,l]}));datos.labores.filter(function(l){return!m.has(l.id)&&cola.some(function(c){return c.id===l.id&&c.estado==='pend'})}).forEach(function(l){m.set(l.id,l)});datos.labores=Array.from(m.values())}
-    }
+  var qAp=sb.from('v_aportes').select('*').order('fecha',{ascending:false});
+  if(yo.rol==='socio')qAp=qAp.eq('persona_id',yo.persona_id).limit(200);
+  prom.push(qAp.then(function(r){if(!r.error&&r.data){datos.aportes=r.data;reaplicarCola('aportes',datos.aportes)}}).catch(function(){}));
+  // Pendientes de cualquier fecha + todo lo del mes: una labor atrasada no debe desaparecer de Aprobar.
+  var mes=fechaBog().slice(0,8)+'01';
+  function qLab(){var q=sb.from('labores').select('*').is('deleted_at',null);if(yo.rol==='socio')q=q.eq('persona_id',yo.persona_id);return q.order('fecha',{ascending:false})}
+  prom.push(Promise.all([qLab().eq('estado','pendiente'),qLab().gte('fecha',mes)]).then(function(rs){
+    if(rs[0].error||rs[1].error||!rs[0].data||!rs[1].data)return;
+    var m=new Map();rs[0].data.concat(rs[1].data).forEach(function(l){m.set(l.id,l)});
+    if(datos.labores.length>10&&m.size===0){console.warn('Respuesta sospechosa: 0 labores donde había muchas.');return}
+    try{localStorage.setItem('eb_rescate_labores',JSON.stringify(datos.labores))}catch(e){}
+    datos.labores.filter(function(l){return!m.has(l.id)&&cola.some(function(c){return c.id===l.id})}).forEach(function(l){m.set(l.id,l)});
+    datos.labores=Array.from(m.values());
+    reaplicarCola('labores',datos.labores);
   }).catch(function(){}));
   prom.push(sb.rpc('mis_alertas').then(function(r){if(r.data)datos.alertas=r.data}).catch(function(){}));
   prom.push(sb.from('config').select('*').limit(50).then(function(r){if(r.data){var m={};r.data.forEach(function(c){m[c.clave]=c.valor});datos.config=m}}).catch(function(){}));
@@ -312,8 +384,8 @@ function _render(){$app.innerHTML=R()}
 function R(){
   switch(E.pantalla){
     case 'cargando':return rCargando();case 'instalar':return rInstalar();
-    case 'login':return rLogin();case 'socio':return rSocio();case 'admin':return rAdmin();
-    case 'revisor':return rRevisor();case 'revisar':return rBandeja();case 'cuenta':return rCuenta();
+    case 'login':return rLogin();case 'socio':return rSocio();case 'admin':return esEscritorio()?rEscritorio(false):rAdmin();
+    case 'revisor':return esEscritorio()?rEscritorio(true):rRevisor();case 'revisar':return rBandeja();case 'cuenta':return rCuenta();
     default:return'<div class="centro"><p>Error</p></div>';
   }
 }
@@ -559,9 +631,7 @@ function rAprobarLabores(sl){
     if(top&&!esTardio)h+='<div style="background:#FBEBD0;border-radius:12px;padding:10px 12px;font-size:15px;color:#4A3209">Trabajó '+hrs.toFixed(1).replace('.0','').replace('.',',')+' h. Se le reconocen 7 horas, el máximo de un día.</div>';
     (l.alertas||[]).forEach(function(a){if(ALERTA_TXT[a])h+='<div style="background:#FBEBD0;border-radius:12px;padding:10px 12px;font-size:15px;color:#4A3209">⚠ '+esc(ALERTA_TXT[a])+'</div>'});
     if(!sl&&!laborAjena(l)){
-      var apr=datos.personas.filter(function(p){return p.rol==='admin'&&p.activo!==false&&!p.deleted_at&&p.id!==l.persona_id&&p.id!==l.registrado_por});
-      h+='<div style="background:#F4F1E8;border-radius:12px;padding:10px 12px;font-size:15px;color:#5B6B5F"><b>'+(yo&&l.persona_id===yo.persona_id?'Es su propia labor':'Lo cargó usted')+'.</b> '+
-        (apr.length?'Lo aprueba: '+esc(apr.map(function(p){return p.nombre}).join(' o ')):'Falta otro administrador')+'</div>';
+      h+='<div style="background:#F4F1E8;border-radius:12px;padding:10px 12px;font-size:15px;color:#5B6B5F"><b>'+esc(motivoBloqueo(l))+'.</b> '+esc(quienApruebaTxt(l))+'</div>';
     } else if(!sl){
       if(E.rechazando===l.id){
         h+='<div class="col" style="gap:8px"><span style="font-size:16px;font-weight:700">¿Por qué la rechaza?</span>';
@@ -867,14 +937,323 @@ function rCuenta(){
     '<button class="btn-o mt" data-a="salir">Cerrar sesión</button></div></div>';
 }
 
+/* ─── Escritorio (admin y revisor, desde 1024 px) ─── */
+var PC_ANCHO=1024;
+function esEscritorio(){return!!yo&&(yo.rol==='admin'||yo.rol==='revisor')&&(window.innerWidth||0)>=PC_ANCHO}
+var MESES_L=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+function mesTxt(){return MESES_L[parseInt(fechaBog().slice(5,7),10)-1]}
+function fechaPc(iso){if(!iso)return'';var p=iso.split('-');return fechaTxt(iso)+' '+p[0].slice(2)}
+function pctTxt(v,t){return t?(Math.round(v/t*1000)/10).toLocaleString('es-CO')+' %':'0 %'}
+function horasTxt(h){return(Math.round(h*10)/10).toLocaleString('es-CO')+' h'}
+function horasLabor(l){return l.tardio?(Number(l.horas_declaradas)||0):minEntre(l.inicio,l.fin)/60}
+function formaCorta(a){if(a.forma==='cuenta')return'Consignación';if(a.forma==='efectivo')return'Efectivo'+(a.recibido_por_nombre?' · recibió '+a.recibido_por_nombre:'');if(a.forma==='directo')return'Pago directo';if(a.forma==='caja')return'Caja común';return a.forma||'s/d'}
+function aportesVivos(){return datos.aportes.filter(function(a){return!a.deleted_at})}
+function resumenPc(){
+  var caps=datos.capitalPersona||[],sum=function(k){return caps.reduce(function(t,c){return t+(Number(c[k])||0)},0)};
+  var pendAp=aportesVivos().filter(function(a){return a.estado==='pendiente'}),pendLab=datos.labores.filter(laborPorAprobar);
+  var lotes=(datos.ganadoLotes||[]).filter(function(g){return(g.activos||0)>0});
+  return{caps:caps,total:sum('capital'),dinero:sum('dinero'),trabajo:sum('valor_trabajo'),
+    pendAp:pendAp,pendApTot:pendAp.reduce(function(t,a){return t+(Number(a.valor)||0)},0),pendLab:pendLab,
+    puedoLab:yo&&yo.rol==='admin'?pendLab.filter(laborAjena):[],puedoAp:pendAp.filter(puedeVerificar),
+    lotes:lotes,animales:lotes.reduce(function(t,g){return t+(g.activos||0)},0)};
+}
+function participacion(caps,total){
+  var conC=caps.filter(function(c){return c.capital>0}).sort(function(a,b){return b.capital-a.capital});
+  var g=conC.slice(0,5).map(function(c,i){return{nombre:nomPers(c.persona_id),capital:c.capital,color:SERIES[i]}});
+  var resto=conC.slice(5);if(resto.length)g.push({nombre:'Otros '+resto.length,capital:resto.reduce(function(t,c){return t+c.capital},0),color:OTROS_C});
+  return{conC:conC,grupos:g};
+}
+function trabajoDelMes(){
+  var mes=fechaBog().slice(0,7),por={};
+  function fila(pid){if(!por[pid])por[pid]={pid:pid,labores:0,horas:0,valor:0};return por[pid]}
+  datos.labores.filter(function(l){return!l.deleted_at&&l.estado==='aprobada'&&(l.fecha||'').slice(0,7)===mes}).forEach(function(l){var f=fila(l.persona_id);f.labores++;f.horas+=horasLabor(l)});
+  (datos.trabajoMes||[]).forEach(function(m){fila(m.persona_id).valor+=Number(m.valor)||0});
+  var filas=Object.keys(por).map(function(k){return por[k]}).filter(function(f){return f.labores||f.valor}).sort(function(a,b){return b.horas-a.horas||b.valor-a.valor});
+  return{filas:filas,horas:filas.reduce(function(t,f){return t+f.horas},0),valor:filas.reduce(function(t,f){return t+f.valor},0),labores:filas.reduce(function(t,f){return t+f.labores},0)};
+}
+function alertasPc(R){
+  var l=[];
+  if(R.puedoLab.length)l.push({p:2,t:'Usted puede aprobar '+R.puedoLab.length+' labor(es).'});
+  if(R.puedoAp.length)l.push({p:2,t:'Usted puede verificar '+R.puedoAp.length+' aporte(s) de dinero.'});
+  (datos.alertas||[]).forEach(function(a){l.push({p:a.prioridad,t:alertaLegible(a.mensaje)})});
+  return l;
+}
+function rEscritorio(sl){
+  var R=resumenPc(),nPuedo=R.puedoLab.length+R.puedoAp.length,v=E.pc;
+  var menu=[['resumen','Resumen','M3 13h8V3H3zM13 21h8V11h-8zM3 21h8v-6H3zM13 3v6h8V3z'],['aprobar','Aprobar',TAB_D.aprobar],['aportes','Aportes','M2 7h20v10H2zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z'],
+    ['trabajo','Trabajo',TAB_D.hoy],['ganado','Ganado',TAB_D.ganado],['socios','Socios',TAB_D.socios],['bodega','Bodega',TAB_D.bodega]];
+  if(!sl)menu.push(['agregar','Agregar',TAB_D.agregar]);else menu.push(['milabor','Mi labor',TAB_D.hoy]);
+  if(!menu.some(function(m){return m[0]===v}))v=E.pc='resumen';
+  var TIT={resumen:'Resumen del proyecto',aprobar:'Aprobar y verificar',aportes:'Aportes de dinero',trabajo:'Trabajo',ganado:'Lotes de ganado',socios:'Socios',bodega:'Bodega (inventario)',agregar:'Agregar',milabor:'Mi labor'};
+  var tit=TIT[v];if(v==='agregar'&&E.subAg){tit={labor:'Actividades',lote:'Lotes',trabajo:'Trabajo de un socio',aporte:'Aporte de dinero'}[E.subAg]||tit}
+  var c='';
+  switch(v){
+    case'resumen':c=pcResumen(R,sl);break;case'aprobar':c=pcAprobar(R,sl);break;case'aportes':c=pcAportes();break;
+    case'trabajo':c=pcTrabajo();break;case'socios':c=pcSocios(R,sl);break;case'bodega':c=pcBodega(sl);break;
+    case'ganado':c='<div class="pc-ganado">'+rGanado(sl)+'</div>';break;
+    case'agregar':c='<div class="pc-angosto">'+rAgregar(false)+'</div>';break;
+    case'milabor':c='<div class="pc-angosto" style="max-width:480px">'+rSocioHoy()+'</div>';break;
+  }
+  var nAl=(datos.alertas||[]).length;
+  var h='<div class="pc"><aside class="pc-menu"><div style="display:flex;flex-direction:column;gap:2px;padding:0 10px 18px"><span style="font-size:22px;font-weight:700">Finca El Bledo</span><span style="font-size:13px;color:#B9C4BB">'+(sl?'Revisor':'Administración')+' · v'+VERSION+'</span></div>';
+  menu.forEach(function(m){
+    h+='<button class="pc-item'+(v===m[0]?' on':'')+'" data-a="pc_ir" data-p="'+m[0]+'"'+(v===m[0]?' aria-current="page"':'')+'>'+ico(m[2],20)+'<span style="flex:1">'+m[1]+'</span>'+(m[0]==='aprobar'&&nPuedo?'<span class="pc-badge">'+nPuedo+'</span>':'')+'</button>';
+  });
+  h+='<div style="margin-top:auto;padding:12px 10px 0;border-top:1px solid #34453A;display:flex;flex-direction:column;gap:2px"><span style="font-size:14px;font-weight:700">'+esc(yo?yo.nombre:'')+'</span><span style="font-size:12px;color:#B9C4BB">'+(sl?'Revisor':'Administrador')+'</span>'+
+    '<button data-a="ir_cuenta" style="border:0;background:transparent;color:#DCE3DD;font-size:13px;text-align:left;padding:6px 0 0;text-decoration:underline">Mi cuenta</button></div></aside>';
+  h+='<div class="pc-cuerpo">'+(sl?'<div class="franja-rev">Modo revisor: puede ver, no cambiar</div>':'')+
+    '<header class="pc-cab"><h1 style="font-size:22px;flex:1">'+esc(tit)+'</h1>'+chipSync()+
+    '<button data-a="pc_ir" data-p="resumen" class="sync-chip" style="border:0;background:#FBEBD0;color:#6B4A10">'+nAl+' alerta'+(nAl===1?'':'s')+'</button>'+
+    '<button data-a="inf_abrir" class="pc-btn" style="height:40px;border-radius:10px;font-size:15px;padding:0 16px;display:flex;align-items:center;gap:8px">'+ico('M12 3v12M7 10l5 5 5-5M5 21h14',18)+'Descargar informe</button></header>'+
+    '<main class="pc-main">'+avisoH()+c+'</main></div></div>';
+  if(E.informe)h+=pcInforme(R);
+  return h;
+}
+function pcResumen(R,sl){
+  var P=participacion(R.caps,R.total),C=2*Math.PI*80,acum=0;
+  var h='<div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px">'+
+    '<div class="pc-kpi" style="background:#1E6B3A;color:#FFF"><span style="font-size:13px;color:#DDEEDF">Capital verificado</span><span style="font-size:26px;font-weight:700">'+pesos(R.total)+'</span><span style="font-size:13px;color:#DDEEDF">Dinero '+pesos(R.dinero)+' · Trabajo '+pesos(R.trabajo)+'</span></div>'+
+    '<div class="pc-kpi" style="background:#FBEBD0;color:#4A3209"><span style="font-size:13px;color:#6B4A10">Dinero por verificar</span><span style="font-size:26px;font-weight:700">'+pesos(R.pendApTot)+'</span><span style="font-size:13px;color:#6B4A10">'+R.pendAp.length+' aporte(s)</span></div>'+
+    '<div class="pc-kpi" style="background:#FFF;border:1px solid #D9D3C3"><span class="pc-sub" style="font-size:13px">Trabajo aprobado</span><span style="font-size:26px;font-weight:700">'+pesos(R.trabajo)+'</span><span class="pc-sub" style="font-size:13px">En lo que va del proyecto</span></div>'+
+    '<div class="pc-kpi" style="background:#FFF;border:1px solid #D9D3C3"><span class="pc-sub" style="font-size:13px">Por aprobar</span><span style="font-size:26px;font-weight:700">'+(R.pendLab.length+R.pendAp.length)+'</span><span class="pc-sub" style="font-size:13px">'+(sl?'Modo revisor: solo ver':'Usted puede aprobar '+(R.puedoLab.length+R.puedoAp.length))+'</span></div></div>';
+  h+='<div style="display:grid;grid-template-columns:1.15fr 1fr .9fr;gap:14px;align-items:start">';
+  h+='<div class="pc-caja" style="padding:18px;display:flex;gap:18px"><div style="position:relative;width:190px;height:190px;flex-shrink:0"><svg width="190" height="190" viewBox="0 0 200 200" role="img" aria-label="Participación"><circle cx="100" cy="100" r="80" fill="none" stroke="#EAE4D3" stroke-width="28"></circle>';
+  P.grupos.forEach(function(g){var l=R.total?g.capital/R.total*C:0;h+='<circle cx="100" cy="100" r="80" fill="none" stroke="'+g.color+'" stroke-width="28" stroke-dasharray="'+Math.max(l-2,.5)+' '+C+'" stroke-dashoffset="'+(-acum)+'" transform="rotate(-90 100 100)"></circle>';acum+=l});
+  h+='</svg><div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center"><span class="pc-sub">Capital verificado</span><span style="font-size:17px;font-weight:700">'+pesos(R.total)+'</span></div></div>'+
+    '<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px"><span style="font-size:16px;font-weight:700">Participación</span>';
+  if(!P.grupos.length)h+='<span class="pc-sub">Aún no hay capital verificado.</span>';
+  P.grupos.forEach(function(g){h+='<div style="display:flex;align-items:center;gap:8px;font-size:13px"><span style="width:12px;height:12px;border-radius:999px;flex-shrink:0;background:'+g.color+'"></span><span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(g.nombre)+'</span><b>'+pctTxt(g.capital,R.total)+'</b></div>'});
+  h+='</div></div>';
+  h+='<div class="pc-caja" style="padding:18px;display:flex;flex-direction:column;gap:10px"><span style="font-size:16px;font-weight:700">Ganado</span>';
+  if(!R.lotes.length)h+='<span class="pc-sub">Sin animales en finca.</span>';
+  R.lotes.forEach(function(g){h+='<div style="display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:baseline;border-top:1px solid #EAE4D3;padding-top:8px"><b style="font-size:15px">'+esc(g.nombre)+'</b><span>'+(g.activos||0)+' animales</span><span style="color:#1E6B3A;font-weight:700">'+(g.gmd_kg?Math.round(g.gmd_kg*1000)+' g/día':'s/d')+'</span></div>'});
+  h+='<span class="pc-sub">'+R.animales+' animales activos en '+R.lotes.length+' lote(s)</span></div>';
+  h+='<div class="pc-caja" style="padding:18px;display:flex;flex-direction:column;gap:8px"><span style="font-size:16px;font-weight:700">Alertas</span>';
+  var al=alertasPc(R);if(!al.length)h+='<span class="pc-sub">No hay alertas.</span>';
+  al.forEach(function(a){h+='<div class="pc-alerta'+(a.p===1?' p1':(a.p===3?' p3':''))+'">'+esc(a.t)+'</div>'});
+  h+='</div></div>';return h;
+}
+var PC_COLS_LAB='1.5fr 1.2fr .9fr 1.2fr .8fr 2fr';
+function pcAprobar(R,sl){
+  var labs=R.pendLab.slice().sort(function(a,b){return a.fecha>b.fecha?-1:(a.fecha<b.fecha?1:0)});
+  Object.keys(E.pcSel).forEach(function(id){if(!labs.some(function(l){return l.id===id&&laborAjena(l)}))delete E.pcSel[id]});
+  var nSel=Object.keys(E.pcSel).length;
+  var h='<div class="pc-caja"><div class="pc-tit"><span style="flex:1">Labores por aprobar · '+labs.length+'</span>';
+  if(!sl)h+='<button class="pc-btn" data-a="pc_aprobar_sel"'+(nSel?'':' disabled')+'>'+(nSel?'Aprobar seleccionadas ('+nSel+')':'Seleccione para aprobar varias')+'</button>';
+  h+='</div><div class="pc-th" style="grid-template-columns:'+PC_COLS_LAB+'"><span>Acción</span><span>Socio</span><span>Fecha</span><span>Actividad</span><span>Horas</span><span>Notas y alertas</span></div>';
+  if(!labs.length)h+='<div class="pc-tr" style="grid-template-columns:1fr"><span class="pc-sub">No hay labores por aprobar.</span></div>';
+  labs.forEach(function(l){
+    var puede=!sl&&laborAjena(l),on=!!E.pcSel[l.id];
+    var fecha=l.fecha_hasta?fechaPc(l.fecha)+' – '+fechaPc(l.fecha_hasta):fechaPc(l.fecha);
+    var horas=l.tardio?horasTxt(horasLabor(l))+' declaradas':durM(minEntre(l.inicio,l.fin));
+    var etq=l.tardio?'Registro tardío'+(l.registrado_por?' · cargó '+nomPers(l.registrado_por):''):'';
+    var al=(l.alertas||[]).filter(function(a){return ALERTA_TXT[a]}).map(function(a){return'⚠ '+ALERTA_TXT[a]});
+    if(!l.tardio&&horasLabor(l)>TOPE_H&&(l.alertas||[]).indexOf('tope_dia')<0)al.push('⚠ Trabajó '+horasTxt(horasLabor(l))+'. Se le reconocen 7 horas, el máximo de un día.');
+    var acc='';
+    if(sl)acc='<span class="pc-sub">'+esc(quienApruebaTxt(l))+'</span>';
+    else if(!puede)acc='<span class="pc-sub">'+esc(motivoBloqueo(l))+'. '+esc(quienApruebaTxt(l))+'</span>';
+    else acc='<span style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><input type="checkbox" data-a="pc_sel" data-p="'+l.id+'" aria-label="Seleccionar"'+(on?' checked':'')+' style="width:18px;height:18px">'+
+      '<button class="pc-btn" data-a="aprobar_lab" data-p="'+l.id+'">Aprobar</button><button class="pc-btn-r" data-a="ini_rech" data-p="'+l.id+'">Rechazar</button>'+
+      (!l.tardio?'<button class="link-btn" style="font-size:13px" data-a="ini_cor" data-p="'+l.id+'">Corregir horario</button>':'')+'</span>';
+    h+='<div class="pc-tr'+(puede||sl?'':' gris')+'" style="grid-template-columns:'+PC_COLS_LAB+'">'+acc+
+      '<span style="display:flex;flex-direction:column;gap:2px"><b>'+esc(nomPers(l.persona_id))+'</b>'+(etq?'<span style="font-size:12px;color:#1B3A66">'+esc(etq)+'</span>':'')+'</span>'+
+      '<span>'+esc(fecha)+'</span><span>'+esc(nomAct(l.actividad_id))+'<br><span class="pc-sub">'+esc(nomPot(l.potrero_id))+'</span></span><span>'+esc(horas)+'</span>'+
+      '<span style="display:flex;flex-direction:column;gap:2px;font-size:13px">'+(l.obs?'<span>'+esc(l.obs)+'</span>':'')+(al.length?'<span style="color:#8A5A0A">'+esc(al.join(' '))+'</span>':'')+(!l.obs&&!al.length?'<span class="pc-sub">—</span>':'')+'</span>';
+    if(puede&&E.rechazando===l.id){
+      h+='<div class="pc-inline"><b style="font-size:14px">¿Por qué la rechaza?</b>';
+      MOT_RECH.forEach(function(m){h+='<button class="pc-btn-o" data-a="rechazar" data-p="'+l.id+'" data-p2="'+esc(m)+'">'+esc(m)+'</button>'});
+      h+='<button class="link-btn" style="font-size:13px;color:#5B6B5F" data-a="cancel_rech">Cancelar</button></div>';
+    }
+    if(puede&&E.corrigiendo===l.id){
+      h+='<div class="pc-inline"><b style="font-size:14px">Corregir horario</b><label class="pc-sub">Inicio</label><input class="inp" style="height:38px;width:auto;font-size:14px" type="datetime-local" data-campo="f_cor_ini" value="'+esc(E.f.f_cor_ini||'')+'">'+
+        '<label class="pc-sub">Fin</label><input class="inp" style="height:38px;width:auto;font-size:14px" type="datetime-local" data-campo="f_cor_fin" value="'+esc(E.f.f_cor_fin||'')+'">'+
+        '<button class="pc-btn" data-a="guardar_cor" data-p="'+l.id+'">Guardar</button><button class="link-btn" style="font-size:13px;color:#5B6B5F" data-a="cancel_cor">Cancelar</button></div>';
+    }
+    h+='</div>';
+  });
+  h+='</div>';
+  h+=pcAportesPorVerificar(R,sl);
+  return h;
+}
+var PC_COLS_APG='1.6fr 1.4fr 1fr .8fr 1fr';
+function pcAportesPorVerificar(R,sl){
+  var g={},orden=[];
+  R.pendAp.forEach(function(a){if(!g[a.persona_id]){g[a.persona_id]=[];orden.push(a.persona_id)}g[a.persona_id].push(a)});
+  orden.sort(function(a,b){return nomPers(a).localeCompare(nomPers(b))});
+  var h='<div class="pc-caja"><div class="pc-tit"><span style="flex:1">Aportes por verificar · '+R.pendAp.length+' aporte(s) · '+pesos(R.pendApTot)+'</span></div>'+
+    '<div class="pc-th" style="grid-template-columns:'+PC_COLS_APG+'"><span>Acción</span><span>Socio</span><span>Aportes</span><span>Desde</span><span>Total</span></div>';
+  if(!orden.length)h+='<div class="pc-tr" style="grid-template-columns:1fr"><span class="pc-sub">No hay aportes por verificar.</span></div>';
+  orden.forEach(function(pid){
+    var it=g[pid].slice().sort(function(a,b){return a.fecha<b.fecha?-1:1}),mios=it.filter(puedeVerificar),abierto=E.verAporteGrupo===pid;
+    var vf=verificadoresDe(it[0]),quien=(yo&&pid===yo.persona_id?'Son sus aportes. ':'')+(vf.length?'Los verifica '+vf.map(function(p){return p.nombre}).join(' o ')+'.':'Falta otro administrador para verificarlos.');
+    var acc=sl?'<span class="pc-sub">'+esc(quien)+'</span>':(mios.length?'<span style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"><button class="pc-btn" data-a="verificar_todos" data-p="'+pid+'">Verificar '+(mios.length===1?'el aporte':'los '+mios.length)+'</button><button class="link-btn" style="font-size:13px" data-a="ver_aportes" data-p="'+pid+'">'+(abierto?'Ocultar':'Ver uno por uno')+'</button></span>':'<span class="pc-sub">'+esc(quien)+'</span>');
+    h+='<div class="pc-tr'+(mios.length||sl?'':' gris')+'" style="grid-template-columns:'+PC_COLS_APG+'">'+acc+'<b>'+esc(it[0].nombre||nomPers(pid))+'</b><span>'+it.length+' aporte(s)</span><span>'+esc(fechaPc(it[0].fecha))+'</span><b>'+pesos(it.reduce(function(t,a){return t+(Number(a.valor)||0)},0))+'</b>';
+    if(abierto&&!sl){
+      it.forEach(function(a){
+        var p=puedeVerificar(a);
+        h+='<div class="pc-inline" style="justify-content:space-between"><span><b>'+pesos(a.valor)+'</b> · '+esc(fechaPc(a.fecha))+' · '+esc(formaTexto(a.forma,a.descripcion))+(a.registrado_por_nombre?' · registró '+esc(a.registrado_por_nombre):'')+'</span><span style="display:flex;gap:6px;flex-wrap:wrap">';
+        if(!p)h+='<span class="pc-sub">Otro administrador debe verificarlo</span>';
+        else if(E.rechAporte===a.id){MOT_NO_ENTRO.forEach(function(m){h+='<button class="pc-btn-o" data-a="no_entro" data-p="'+a.id+'" data-p2="'+esc(m)+'">'+esc(m)+'</button>'});h+='<button class="link-btn" style="font-size:13px;color:#5B6B5F" data-a="cancel_rech_ap">Cancelar</button>'}
+        else h+='<button class="pc-btn" data-a="si_entro" data-p="'+a.id+'">Sí entró</button><button class="pc-btn-r" data-a="ini_rech_ap" data-p="'+a.id+'">No entró</button>';
+        h+='</span></div>';
+      });
+    }
+    h+='</div>';
+  });
+  return h+'</div>';
+}
+var PC_COLS_AP='.8fr 1.3fr 2.2fr 1.5fr .9fr 1fr';
+function pcAportes(){
+  var todos=aportesVivos();
+  var MAP={todos:null,pendiente:'pendiente',aprobado:'aprobado',rechazado:'rechazado'};
+  var f=todos.filter(function(a){return(!MAP[E.apFiltro]||a.estado===MAP[E.apFiltro])&&(E.apSocio==='todos'||a.persona_id===E.apSocio)}).sort(function(a,b){return a.fecha<b.fecha?1:(a.fecha>b.fecha?-1:0)});
+  var socios=[];todos.forEach(function(a){if(socios.indexOf(a.persona_id)<0)socios.push(a.persona_id)});
+  socios.sort(function(a,b){return nomPers(a).localeCompare(nomPers(b))});
+  var h='<div class="pc-caja"><div class="pc-tit" style="font-weight:400">';
+  [['todos','Todos'],['pendiente','Por verificar'],['aprobado','Verificados'],['rechazado','No entró']].forEach(function(x){h+='<button class="pc-fil'+(E.apFiltro===x[0]?' on':'')+'" data-a="ap_filtro" data-p="'+x[0]+'" aria-pressed="'+(E.apFiltro===x[0])+'">'+x[1]+'</button>'});
+  h+='<select data-cambio="ap_socio" aria-label="Filtrar por socio" style="height:36px;border-radius:8px;border:1px solid #B9B2A0;padding:0 10px;font-size:14px;background:#FFF;color:#1B2A1F;margin-left:auto"><option value="todos">Todos los socios</option>';
+  socios.forEach(function(pid){h+='<option value="'+esc(pid)+'"'+(E.apSocio===pid?' selected':'')+'>'+esc(nomPers(pid))+'</option>'});
+  h+='</select><b style="font-size:15px">'+f.length+' aporte(s) · '+pesos(f.reduce(function(t,a){return t+(Number(a.valor)||0)},0))+'</b></div>'+
+    '<div class="pc-th" style="grid-template-columns:'+PC_COLS_AP+'"><span>Fecha</span><span>Socio</span><span>Detalle</span><span>Cómo entró</span><span>Valor</span><span>Estado</span></div>';
+  if(!f.length)h+='<div class="pc-tr" style="grid-template-columns:1fr"><span class="pc-sub">No hay aportes con ese filtro.</span></div>';
+  f.forEach(function(a){
+    var est=a.estado==='aprobado'?['chip-ok','Verificado']:(a.estado==='rechazado'?['chip-no','No entró']:['chip-pend','Por verificar']);
+    var det=a.descripcion||'';if(a.estado==='rechazado'&&a.motivo_rechazo)det=(det?det+' · ':'')+a.motivo_rechazo;
+    h+='<div class="pc-tr" style="grid-template-columns:'+PC_COLS_AP+'"><span>'+esc(fechaPc(a.fecha))+'</span><span>'+esc(a.nombre||nomPers(a.persona_id))+'</span><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="'+esc(det)+'">'+esc(det||'—')+'</span><span>'+esc(formaCorta(a))+'</span><b>'+pesos(a.valor)+'</b><span class="chip '+est[0]+'">'+est[1]+'</span></div>';
+  });
+  return h+'</div>';
+}
+function pcTrabajo(){
+  var T=trabajoDelMes(),mes=mesTxt();
+  var h='<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start"><div class="pc-caja"><div class="pc-tit">Trabajo por socio · '+mes+'</div>'+
+    '<div class="pc-th" style="grid-template-columns:1.6fr .8fr .8fr 1fr"><span>Socio</span><span>Labores</span><span>Horas</span><span>Valor</span></div>';
+  if(!T.filas.length)h+='<div class="pc-tr" style="grid-template-columns:1fr"><span class="pc-sub">Aún no hay trabajo aprobado este mes.</span></div>';
+  T.filas.forEach(function(f){h+='<div class="pc-tr" style="grid-template-columns:1.6fr .8fr .8fr 1fr"><b>'+esc(nomPers(f.pid))+'</b><span>'+f.labores+'</span><span>'+horasTxt(f.horas)+'</span><b>'+pesos(f.valor)+'</b></div>'});
+  if(T.filas.length)h+='<div class="pc-tr" style="grid-template-columns:1.6fr .8fr .8fr 1fr;background:#F4F1E8"><b>Total</b><b>'+T.labores+'</b><b>'+horasTxt(T.horas)+'</b><b>'+pesos(T.valor)+'</b></div>';
+  h+='<div class="pc-tr" style="grid-template-columns:1fr"><span class="pc-sub">Labores y horas: labores aprobadas del mes. Valor: lo que la base acreditó como trabajo en '+mes+'.</span></div></div>';
+  var acts=(datos.tiempoAct||[]).slice().sort(function(a,b){return(b.horas||0)-(a.horas||0)}),mx=acts.length?(Number(acts[0].horas)||1):1;
+  h+='<div class="pc-caja"><div class="pc-tit">Horas por actividad · '+mes+'</div>';
+  if(!acts.length)h+='<div class="pc-tr" style="grid-template-columns:1fr"><span class="pc-sub">Sin labores aprobadas con hora este mes.</span></div>';
+  acts.forEach(function(a){h+='<div class="pc-tr" style="grid-template-columns:1fr;gap:4px"><div class="entre"><b>'+esc(a.actividad)+'</b><span>'+horasTxt(Number(a.horas)||0)+' · '+(a.labores||0)+' labor(es)</span></div><div style="height:8px;border-radius:999px;background:#EAE4D3"><div style="height:8px;border-radius:999px;background:#1E6B3A;width:'+Math.round((Number(a.horas)||0)/mx*100)+'%"></div></div></div>'});
+  h+='<div class="pc-tr" style="grid-template-columns:1fr"><span class="pc-sub">Solo labores con hora de inicio y fin (los registros tardíos no tienen horario).</span></div></div></div>';
+  return h;
+}
+var PC_COLS_SOC='1.5fr 1.6fr .8fr 1fr 1fr 1fr 1fr .6fr';
+function pcSocios(R,sl){
+  var caps={};(R.caps||[]).forEach(function(c){caps[c.persona_id]=c});
+  var pers=datos.personas.filter(function(p){return!p.deleted_at}).map(function(p){var c=caps[p.id]||{};return{p:p,t:Number(c.valor_trabajo)||0,d:Number(c.dinero)||0,c:Number(c.capital)||0}})
+    .sort(function(a,b){return b.c-a.c||(a.p.nombre||'').localeCompare(b.p.nombre||'')});
+  var ROL={admin:['chip-admin','Admin'],revisor:['chip-rev','Revisor'],socio:['chip-ok','Socio']};
+  var h='<div class="pc-caja"><div class="pc-th" style="grid-template-columns:'+PC_COLS_SOC+'"><span>Acción</span><span>Socio</span><span>Rol</span><span>Usuario</span><span>Trabajo</span><span>Dinero</span><span>Total</span><span>%</span></div>';
+  pers.forEach(function(o){
+    var p=o.p,act=p.activo!==false,r=act?(ROL[p.rol]||ROL.socio):['chip-off','Inactivo'],esYo=yo&&p.id===yo.persona_id;
+    var usr=p.user_id?(p.email?p.email.split('@')[0]:'Con usuario'):'';
+    var acc='';
+    if(esYo)acc='<span class="pc-sub">Es usted</span>';
+    else if(!sl)acc='<span style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">'+(act?(p.user_id?'<button class="pc-btn-o" data-a="nueva_clave" data-p="'+p.id+'">Nueva clave</button>':'<button class="pc-btn-o" data-a="ini_da" data-p="'+p.id+'">Darle acceso</button>'):'')+
+      '<button class="link-btn" style="font-size:13px" data-a="pc_mas" data-p="'+p.id+'">'+(E.pcMas===p.id?'Menos':'Más')+'</button></span>';
+    h+='<div class="pc-tr" style="grid-template-columns:'+PC_COLS_SOC+'">'+(acc||'<span></span>')+'<b style="'+(act?'':'color:#8A8577')+'">'+esc(p.nombre)+'</b><span class="chip '+r[0]+'">'+r[1]+'</span>'+
+      (usr?'<span>'+esc(usr)+'</span>':'<span style="color:#8A8577;font-style:italic">Sin usuario</span>')+
+      '<span>'+pesos(o.t)+'</span><span>'+pesos(o.d)+'</span><b>'+pesos(o.c)+'</b><span>'+pctTxt(o.c,R.total)+'</span>';
+    if(!sl&&E.dandoAcceso===p.id&&!p.user_id){
+      if(!E.f.f_da_usr)E.f.f_da_usr=sugerirUsuario(p.nombre);
+      if(!E.f.f_da_clave)E.f.f_da_clave=genClave();
+      h+='<div class="pc-inline"><b style="font-size:14px">Darle acceso a '+esc(p.nombre)+'</b><label class="pc-sub">Usuario</label><input class="inp" style="height:38px;width:220px;font-size:14px" data-campo="f_da_usr" value="'+esc(E.f.f_da_usr)+'">'+
+        '<span style="font-size:14px">Clave: <b>'+esc(E.f.f_da_clave)+'</b></span><button class="pc-btn" data-a="dar_acceso" data-p="'+p.id+'">Guardar</button><button class="link-btn" style="font-size:13px;color:#5B6B5F" data-a="cancel_da">Cancelar</button></div>';
+    }
+    if(!sl&&!esYo&&E.pcMas===p.id){
+      h+='<div class="pc-inline"><span style="font-size:14px">Rol:</span>';
+      [['socio','Socio'],['revisor','Revisor'],['admin','Admin']].forEach(function(x){var on=p.rol===x[0];h+='<button class="pc-btn-o" style="'+(on?'background:#DDEEDF;border:2px solid #1E6B3A;font-weight:700':'')+'" data-a="cambiar_rol" data-p="'+p.id+'" data-p2="'+x[0]+'">'+x[1]+'</button>'});
+      h+='<span style="flex:1"></span><button class="'+(act?'pc-btn-r':'pc-btn')+'" data-a="toggle_pers" data-p="'+p.id+'">'+(act?'Desactivar':'Activar')+'</button></div>';
+      if(E.desactivando===p.id){
+        h+='<div class="pc-inline" style="background:#FDF0E0"><b style="font-size:14px;color:#6B4A10">¿Por qué lo desactiva?</b>';
+        ['Ya no trabaja','Pidió retirarse','Otro'].forEach(function(m){h+='<button class="pc-btn-o" data-a="desact_motivo" data-p="'+p.id+'" data-p2="'+m+'">'+m+'</button>'});
+        h+='<button class="link-btn" style="font-size:13px;color:#5B6B5F" data-a="cancel_desact">Cancelar</button></div>';
+      }
+    }
+    if(p._claveNueva)h+='<div class="pc-inline" style="background:#DDEEDF;color:#14492A">Clave nueva de '+esc(p.nombre)+': <b>'+esc(p._claveNueva)+'</b>. Désela en persona.</div>';
+    if(p._accesoOk)h+='<div class="pc-inline" style="background:#DDEEDF;color:#14492A">Acceso creado. Clave: <b>'+esc(p._accesoOk)+'</b>. Désela en persona.</div>';
+    h+='</div>';
+  });
+  h+='</div>';
+  if(!sl){
+    if(!E.f.f_pclave)E.f.f_pclave=genClave();
+    h+='<div class="pc-caja pc-angosto" style="padding:16px;display:flex;flex-direction:column;gap:10px"><b style="font-size:16px">Nuevo socio con usuario</b>'+
+      '<div class="g2"><span><label class="pc-sub">Nombre</label><input class="inp" style="height:42px;font-size:15px" data-campo="f_pnom" placeholder="Ej.: Carlos Pérez" value="'+esc(E.f.f_pnom||'')+'"></span>'+
+      '<span><label class="pc-sub">Usuario</label><input class="inp" style="height:42px;font-size:15px" data-campo="f_pusr" placeholder="Ej.: carlos" value="'+esc(E.f.f_pusr||'')+'"></span></div>'+
+      '<span style="font-size:14px">La clave será <b>'+esc(E.f.f_pclave)+'</b>. Désela en persona.</span><button class="pc-btn" style="height:42px;font-size:15px;align-self:flex-start;padding:0 18px" data-a="crear_socio">Crear socio</button>'+
+      '<span class="pc-sub">Para un socio que solo aporta dinero y no necesita usuario: Agregar → Un aporte de dinero → + Otro socio.</span></div>';
+  }
+  return h;
+}
+var PC_COLS_BOD='1.3fr 2fr 1fr 1fr .8fr';
+function pcBodega(sl){
+  var h='';
+  if(!sl)h+='<div class="pc-caja pc-angosto" style="padding:16px;display:flex;flex-direction:column;gap:10px"><label class="lbl">Nuevo producto</label><input class="inp" data-campo="f_inom" placeholder="Ej.: Sal mineralizada" value="'+esc(E.f.f_inom||'')+'"><span style="font-size:15px">Se cuenta en</span><div class="g4">'+
+    UNIDADES.map(function(u){var on=(E.f.f_iun||'kg')===u;return'<button data-a="sel_un" data-p="'+u+'" style="height:42px;border-radius:10px;font-size:15px;font-weight:700;color:#1B2A1F;'+(on?'background:#DDEEDF;border:3px solid #1E6B3A':'background:#FFF;border:1px solid #B9B2A0')+'">'+u+'</button>'}).join('')+
+    '</div><button class="pc-btn" style="height:42px;font-size:15px" data-a="agregar_prod">Agregar producto</button></div>';
+  h+='<div class="pc-caja"><div class="pc-th" style="grid-template-columns:'+PC_COLS_BOD+'"><span>Acción</span><span>Producto</span><span>Existencia</span><span>Mínimo</span><span>Estado</span></div>';
+  var prods=datos.stock||[];
+  if(!prods.length)h+='<div class="pc-tr" style="grid-template-columns:1fr"><span class="pc-sub">Aún no hay productos.</span></div>';
+  prods.forEach(function(p){
+    var mov=E.movProd===p.producto_id,bajo=p.bajo||p.negativo;
+    var acc=sl?'<span></span>':(mov?'<span class="pc-sub">'+(E.movTipo==='entrada'?'¿Cuánto entró?':'¿Cuánto salió?')+'</span>':'<span style="display:flex;gap:6px"><button class="pc-btn-o" style="background:#DDEEDF;border:0;color:#14492A;font-weight:700" data-a="inv_abrir" data-p="'+p.producto_id+'" data-p2="entrada">+ Entró</button><button class="pc-btn-o" style="background:#FBEBD0;border:0;color:#4A3209;font-weight:700" data-a="inv_abrir" data-p="'+p.producto_id+'" data-p2="salida">− Salió</button></span>');
+    h+='<div class="pc-tr" style="grid-template-columns:'+PC_COLS_BOD+'">'+acc+'<b>'+esc(p.nombre)+'</b><span>'+(p.stock!=null?p.stock:0)+' '+esc(p.unidad)+'</span><span>'+(p.stock_minimo!=null?p.stock_minimo+' '+esc(p.unidad):'s/d')+'</span><span class="chip '+(bajo?'chip-pend':'chip-ok')+'">'+(p.negativo?'Negativo':(bajo?'Bajo':'Bien'))+'</span>';
+    if(mov&&!sl){h+='<div class="pc-inline">';[1,5,10,25].forEach(function(n){h+='<button class="pc-btn-o" style="font-weight:700;min-width:48px" data-a="inv_cant" data-p="'+p.producto_id+'" data-p2="'+n+'">'+n+'</button>'});h+='<button class="link-btn" style="font-size:13px;color:#5B6B5F" data-a="inv_cancel">Cancelar</button></div>'}
+    h+='</div>';
+  });
+  return h+'</div>';
+}
+function pcInforme(R){
+  var P=participacion(R.caps,R.total),T=trabajoDelMes(),mes=mesTxt(),acts=(datos.tiempoAct||[]).slice().sort(function(a,b){return(b.horas||0)-(a.horas||0)});
+  var capsP={};R.caps.forEach(function(c){capsP[c.persona_id]=c});
+  var h='<div class="inf-fondo"><div class="inf-hoja">'+
+    '<div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #1E6B3A;padding-bottom:12px;gap:16px"><span style="display:flex;flex-direction:column;gap:2px"><span style="font-size:22px;font-weight:700">Finca El Bledo · Informe del proyecto</span><span style="color:#5B6B5F">Inversión ganadera CiberSacha · corte al '+esc(fechaLarga(fechaBog()).replace(/^\S+ /,''))+' de '+fechaBog().slice(0,4)+'</span></span>'+
+    '<span style="font-size:11px;color:#5B6B5F;text-align:right">Generado por '+esc(yo?yo.nombre:'')+'<br>desde la app (v'+VERSION+')</span></div>';
+  h+='<h2>1. Resumen de la inversión</h2><div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px">'+
+    [['Capital verificado',pesos(R.total)],['Dinero verificado',pesos(R.dinero)],['Trabajo aprobado',pesos(R.trabajo)],['Animales en finca',String(R.animales)]].map(function(k){return'<span style="border:1px solid #D9D3C3;border-radius:6px;padding:8px;display:flex;flex-direction:column;gap:2px"><span style="font-size:11px;color:#5B6B5F">'+k[0]+'</span><b style="font-size:15px">'+k[1]+'</b></span>'}).join('')+'</div>';
+  var cs='2fr 1fr 1fr 1fr .6fr';
+  h+='<h2>2. Participación por socio</h2><div><div class="inf-t cab" style="grid-template-columns:'+cs+'"><span>Socio</span><span>Dinero</span><span>Trabajo</span><span>Total</span><span>%</span></div>';
+  if(!P.conC.length)h+='<div class="inf-t"><span>Aún no hay capital verificado.</span></div>';
+  P.conC.forEach(function(c){var x=capsP[c.persona_id]||c;h+='<div class="inf-t" style="grid-template-columns:'+cs+'"><span>'+esc(nomPers(c.persona_id))+'</span><span>'+pesos(x.dinero||0)+'</span><span>'+pesos(x.valor_trabajo||0)+'</span><span>'+pesos(c.capital)+'</span><span>'+pctTxt(c.capital,R.total)+'</span></div>'});
+  if(P.conC.length)h+='<div class="inf-t" style="grid-template-columns:'+cs+';font-weight:700"><span>Total</span><span>'+pesos(R.dinero)+'</span><span>'+pesos(R.trabajo)+'</span><span>'+pesos(R.total)+'</span><span>100 %</span></div>';
+  h+='</div>';
+  var cg='1.4fr 1fr .8fr 1fr 1fr 1.2fr';
+  h+='<h2>3. Ganado por lote</h2><div><div class="inf-t cab" style="grid-template-columns:'+cg+'"><span>Lote</span><span>Contrato</span><span>Animales</span><span>Peso prom.</span><span>Ganan al día</span><span>Valor de compra</span></div>';
+  if(!R.lotes.length)h+='<div class="inf-t"><span>Sin animales en finca.</span></div>';
+  R.lotes.forEach(function(g){h+='<div class="inf-t" style="grid-template-columns:'+cg+'"><span>'+esc(g.nombre)+'</span><span>'+(g.pct_empresa?g.pct_empresa+'/'+(100-g.pct_empresa):'Sin contrato')+'</span><span>'+(g.activos||0)+'</span><span>'+(g.peso_prom_actual?kgT(g.peso_prom_actual):'s/d')+'</span><span>'+(g.gmd_kg?Math.round(g.gmd_kg*1000)+' g':'s/d')+'</span><span>'+(g.valor_compra?pesos(g.valor_compra):'s/d')+'</span></div>'});
+  h+='</div>';
+  h+='<h2>4. Trabajo del mes ('+mes+')</h2><span>'+(T.filas.length?horasTxt(T.horas)+' en '+T.labores+' labor(es) aprobada(s) de '+T.filas.length+' socio(s); valor acreditado '+pesos(T.valor)+'.'+(acts.length?' Actividad principal: '+esc(acts[0].actividad)+' ('+horasTxt(Number(acts[0].horas)||0)+').':''):'Aún no hay trabajo aprobado este mes.')+'</span>';
+  h+='<h2>5. Pendientes y alertas</h2><span>• Aportes por verificar: '+R.pendAp.length+' por '+pesos(R.pendApTot)+' (no suman en la participación).</span><span>• Labores por aprobar: '+R.pendLab.length+'.</span>';
+  (datos.alertas||[]).forEach(function(a){h+='<span>• '+esc(alertaLegible(a.mensaje))+'</span>'});
+  h+='<span style="font-size:11px;color:#5B6B5F;border-top:1px solid #D9D3C3;padding-top:8px;margin-top:6px">Solo incluye aportes verificados por un segundo administrador y trabajo aprobado. Lo pendiente se muestra aparte, en la sección 5.</span>'+
+    '<div class="inf-no-imp" style="display:flex;gap:10px;justify-content:flex-end"><button data-a="inf_cerrar" style="height:40px;border-radius:10px;border:1px solid #1B2A1F;background:#FFF;font-size:15px;padding:0 16px;color:#1B2A1F">Cerrar</button><button data-a="inf_imprimir" class="pc-btn" style="height:40px;border-radius:10px;font-size:15px;padding:0 16px">Guardar como PDF</button></div>';
+  return h+'</div></div>';
+}
+var _modoPc=null;
+window.addEventListener('resize',function(){var m=esEscritorio();if(m!==_modoPc){_modoPc=m;render()}});
+
 /* ─── Eventos ─── */
 $app.addEventListener('input',function(e){if(e.target.dataset.campo)E.f[e.target.dataset.campo]=e.target.value});
+$app.addEventListener('change',function(e){var c=e.target.dataset&&e.target.dataset.cambio;if(c==='ap_socio'){E.apSocio=e.target.value;render()}});
 $app.addEventListener('click',function(e){
   var btn=e.target.closest('[data-a]');if(!btn)return;var a=btn.dataset.a,p=btn.dataset.p,p2=btn.dataset.p2;
   switch(a){
   case'instalar':hInstalar();return;
   case'entrar':hEntrar();return;
   case'ir_tab':E.tab=p;E.aviso='';E.rechazando=null;E.corrigiendo=null;E.gAcc=null;E.movProd=null;E.subAg=null;E.paso='inicio';E.pasoT='socio';E.pasoA='socio';E.editandoNota=null;E.verAporteGrupo=null;E.rechAporte=null;E.dandoAcceso=null;render();return;
+  case'pc_ir':E.pc=p;E.aviso='';E.rechazando=null;E.corrigiendo=null;E.gAcc=null;E.movProd=null;E.subAg=null;E.paso='inicio';E.pasoT='socio';E.pasoA='socio';E.editandoNota=null;E.verAporteGrupo=null;E.rechAporte=null;E.dandoAcceso=null;E.pcSel={};E.pcMas=null;E.desactivando=null;render();return;
+  case'pc_sel':if(E.pcSel[p])delete E.pcSel[p];else E.pcSel[p]=true;render();return;
+  case'pc_mas':E.pcMas=E.pcMas===p?null:p;E.desactivando=null;render();return;
+  case'pc_aprobar_sel':(function(){
+    var ls=datos.labores.filter(function(l){return E.pcSel[l.id]&&laborPorAprobar(l)&&laborAjena(l)});
+    ls.forEach(function(l){encolar('labores','editar',l.id,payloadAprobar())});
+    E.pcSel={};E.aviso=ls.length+' labor(es) aprobada(s).';E.avisoOk=true;render();
+  })();return;
+  case'ap_filtro':E.apFiltro=p;render();return;
+  case'inf_abrir':E.informe=true;render();return;
+  case'inf_cerrar':E.informe=false;render();return;
+  case'inf_imprimir':window.print();return;
   case'ir_revisar':E.pantalla='revisar';render();return;
   case'ir_cuenta':E.pantalla='cuenta';render();return;
   case'volver':if(yo){E.pantalla=yo.rol==='admin'?'admin':(yo.rol==='revisor'?'revisor':'socio')}else E.pantalla='login';render();return;
@@ -895,7 +1274,7 @@ $app.addEventListener('click',function(e){
   case'cancel_cor':E.corrigiendo=null;render();return;
   case'guardar_cor':var ini=E.f.f_cor_ini,fin=E.f.f_cor_fin;if(!ini||!fin){E.aviso='Escriba las dos horas.';render();return}encolar('labores','editar',p,payloadCorregirHorario(new Date(ini).toISOString(),new Date(fin).toISOString()));E.corrigiendo=null;E.aviso='Horario corregido.';return;
   case'agregar_act':hAgregarAct();return;
-  case'toggle_act':var ac=datos.actividades.find(function(x){return x.id===p});if(ac){encolar('catalogos','editar',p,{activo:ac.activo===false});ac.activo=ac.activo===false;guardar();render()}return;
+  case'toggle_act':var ac=datos.actividades.find(function(x){return x.id===p});if(ac){encolar('catalogos','editar',p,payloadActividadActiva(ac.activo===false));ac.activo=ac.activo===false;guardar();render()}return;
   case'agregar_pot':hAgregarPot();return;
   case'g_abrir':E.gAcc=p;E.gLote=p2;E.f.f_gn='';E.f.f_gkg='';E.f.f_gpre='';E.f.f_gcausa='Murió';E.aviso='';render();return;
   case'g_cerrar':E.gAcc=null;E.gLote=null;render();return;
@@ -1059,7 +1438,7 @@ function hCrearSocio(){
 }
 function hCambiarRol(id,rol){
   E.aviso='Cambiando…';render();
-  sb.from('personas').update({rol:rol}).eq('id',id).select('id').then(function(r){
+  sb.from('personas').update(payloadCambiarRol(rol)).eq('id',id).select('id').then(function(r){
     if(r.error){E.aviso=r.error.message;render();return}
     if(!r.data||!r.data.length){E.aviso='Sin permiso.';render();return}
     var p=datos.personas.find(function(x){return x.id===id});if(p)p.rol=rol;
@@ -1166,7 +1545,7 @@ function hDarAcceso(pid){
     E.dandoAcceso=null;E.aviso='Acceso creado. Clave: '+clave;E.avisoOk=true;render();refrescar();
   }).catch(function(e){E.aviso=e.message;render()});
 }
-function hSalir(){if(sb)sb.auth.signOut().catch(function(){});yo=null;localStorage.removeItem(LS_YO);E={pantalla:'login',tab:'hoy',subAg:null,paso:'inicio',pasoT:'socio',pasoA:'socio',selAct:null,selPot:null,rechazando:null,corrigiendo:null,gAcc:null,gLote:null,gVer:null,gNuevo:false,movProd:null,movTipo:null,selSocio:null,desactivando:null,editandoNota:null,verAporteGrupo:null,rechAporte:null,dandoAcceso:null,f:{},aviso:'',avisoOk:false};render()}
+function hSalir(){if(sb)sb.auth.signOut().catch(function(){});yo=null;localStorage.removeItem(LS_YO);E={pantalla:'login',tab:'hoy',subAg:null,paso:'inicio',pasoT:'socio',pasoA:'socio',selAct:null,selPot:null,rechazando:null,corrigiendo:null,gAcc:null,gLote:null,gVer:null,gNuevo:false,movProd:null,movTipo:null,selSocio:null,desactivando:null,editandoNota:null,verAporteGrupo:null,rechAporte:null,dandoAcceso:null,pc:'resumen',pcSel:{},apFiltro:'todos',apSocio:'todos',informe:false,f:{},aviso:'',avisoOk:false};render()}
 
 /* ─── Arranque ─── */
 function arrancar(){
