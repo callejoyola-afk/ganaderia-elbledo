@@ -120,6 +120,9 @@ function nomPers(id){var p=datos.personas.find(function(x){return x.id===id});re
 /* ─── Helpers ─── */
 function verificadoresDe(ap){return datos.personas.filter(function(p){return p.rol==='admin'&&p.activo!==false&&!p.deleted_at&&p.id!==ap.persona_id&&p.id!==ap.registrado_por})}
 function puedeVerificar(ap){if(!yo||yo.rol!=='admin')return false;return yo.persona_id!==ap.persona_id&&yo.persona_id!==ap.registrado_por}
+function laborAjena(l){return!!yo&&l.persona_id!==yo.persona_id&&!(l.tardio&&l.registrado_por===yo.persona_id)}
+function laborPorAprobar(l){return l.estado==='pendiente'&&(l.fin||l.tardio)&&!l.deleted_at}
+var ALERTA_TXT={ya_tiene_labores_en_esas_fechas:'Ojo: este socio ya tiene labores registradas en esas fechas. Revise que no se cuente dos veces.',tope_dia:'Pasa del máximo de horas que se reconocen en un día.',traslape:'Se cruza en el horario con otra labor de este socio.'};
 function sugerirUsuario(nombre){return nombre.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/\s+/g,'').replace(/[^a-z0-9]/g,'')}
 function solapaLabores(pid,desde,hasta){return datos.labores.filter(function(l){return l.persona_id===pid&&!l.deleted_at&&l.estado!=='rechazada'&&l.fecha<=hasta&&(l.fecha_hasta||l.fecha)>=desde})}
 function inicioMesCargado(){return fechaBog().slice(0,8)+'01'}
@@ -535,10 +538,11 @@ function rAprobarAportes(sl){
   return h;
 }
 function rAprobarLabores(sl){
-  var pend=datos.labores.filter(function(l){return l.estado==='pendiente'&&(l.fin||l.tardio)&&!l.deleted_at}).sort(function(a,b){return a.fecha>b.fecha?-1:1});
+  var pend=datos.labores.filter(laborPorAprobar).sort(function(a,b){return a.fecha>b.fecha?-1:1});
+  var nAprob=pend.filter(laborAjena).length;
   var h='';
   if(pend.length)h+='<h2 style="font-size:20px;margin-top:8px">Jornadas por aprobar</h2>';
-  if(pend.length&&!sl)h+='<button class="btn-v" style="border:2px solid #1E6B3A;background:transparent;color:#1E6B3A" data-a="aprobar_todas">Aprobar las '+pend.length+' jornadas</button>';
+  if(nAprob&&!sl)h+='<button class="btn-v" style="border:2px solid #1E6B3A;background:transparent;color:#1E6B3A" data-a="aprobar_todas">Aprobar las '+nAprob+' jornadas</button>';
   if(!pend.length&&!datos.aportes.filter(function(a){return a.estado==='pendiente'}).length)h+='<div class="tarj" style="padding:24px 20px;text-align:center">'+ico('M20 6 9 17l-5-5',48,'#1E6B3A')+'<div style="font-size:20px;font-weight:700;margin-top:8px">No hay nada por aprobar</div></div>';
   pend.forEach(function(l){
     var nm=nomPers(l.persona_id);
@@ -552,8 +556,13 @@ function rAprobarLabores(sl){
     h+='<span style="font-size:17px">'+esc(detTiempo)+'</span>'+
       '<span class="sub">'+esc(nomAct(l.actividad_id))+' · '+esc(nomPot(l.potrero_id))+'</span>';
     if(l.obs)h+='<div style="background:#F4F1E8;border-radius:12px;padding:10px 12px;font-size:15px;color:#5B6B5F">Nota del socio: '+esc(l.obs)+'</div>';
-    if(top)h+='<div style="background:#FBEBD0;border-radius:12px;padding:10px 12px;font-size:15px;color:#4A3209">'+(esTardio?'Declaró':'Trabajó')+' '+hrs+' h. Se le reconocen 7 horas, el máximo de un día.</div>';
-    if(!sl){
+    if(top&&!esTardio)h+='<div style="background:#FBEBD0;border-radius:12px;padding:10px 12px;font-size:15px;color:#4A3209">Trabajó '+hrs.toFixed(1).replace('.0','').replace('.',',')+' h. Se le reconocen 7 horas, el máximo de un día.</div>';
+    (l.alertas||[]).forEach(function(a){if(ALERTA_TXT[a])h+='<div style="background:#FBEBD0;border-radius:12px;padding:10px 12px;font-size:15px;color:#4A3209">⚠ '+esc(ALERTA_TXT[a])+'</div>'});
+    if(!sl&&!laborAjena(l)){
+      var apr=datos.personas.filter(function(p){return p.rol==='admin'&&p.activo!==false&&!p.deleted_at&&p.id!==l.persona_id&&p.id!==l.registrado_por});
+      h+='<div style="background:#F4F1E8;border-radius:12px;padding:10px 12px;font-size:15px;color:#5B6B5F"><b>'+(yo&&l.persona_id===yo.persona_id?'Es su propia labor':'Lo cargó usted')+'.</b> '+
+        (apr.length?'Lo aprueba: '+esc(apr.map(function(p){return p.nombre}).join(' o ')):'Falta otro administrador')+'</div>';
+    } else if(!sl){
       if(E.rechazando===l.id){
         h+='<div class="col" style="gap:8px"><span style="font-size:16px;font-weight:700">¿Por qué la rechaza?</span>';
         MOT_RECH.forEach(function(m){h+='<button data-a="rechazar" data-p="'+l.id+'" data-p2="'+esc(m)+'" style="min-height:52px;border-radius:14px;border:1px solid #D9D3C3;background:#F4F1E8;font-size:17px;text-align:left;padding:10px 14px;color:#1B2A1F">'+esc(m)+'</button>'});
@@ -878,7 +887,7 @@ $app.addEventListener('click',function(e){
   case'empezar':hEmpezar();return;
   case'terminar':hTerminar();return;
   case'aprobar_lab':encolar('labores','editar',p,payloadAprobar());E.aviso='Aprobada.';E.avisoOk=true;return;
-  case'aprobar_todas':datos.labores.filter(function(l){return l.estado==='pendiente'&&(l.fin||l.tardio)&&!l.deleted_at}).forEach(function(l){encolar('labores','editar',l.id,payloadAprobar())});E.aviso='Todas aprobadas.';E.avisoOk=true;return;
+  case'aprobar_todas':(function(){var ls=datos.labores.filter(function(l){return laborPorAprobar(l)&&laborAjena(l)});ls.forEach(function(l){encolar('labores','editar',l.id,payloadAprobar())});E.aviso=ls.length+' jornada(s) aprobada(s).';E.avisoOk=true;render()})();return;
   case'ini_rech':E.rechazando=p;E.corrigiendo=null;E.aviso='';render();return;
   case'cancel_rech':E.rechazando=null;render();return;
   case'rechazar':encolar('labores','editar',p,payloadRechazar(p2||btn.textContent.trim()));E.rechazando=null;E.aviso='Rechazada.';return;
